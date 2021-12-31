@@ -1,0 +1,11 @@
+{
+    "DATABASE": {
+        "MYSQL_HOST": "localhost",
+        "MYSQL_DATABASE": "SWOB-DevAPI",
+        "MYSQL_USER": "root",
+        "MYSQL_PASSWORD": ""
+    },
+    "SERVER": {
+        "PORT": 9000
+    }
+}
