@@ -6,11 +6,22 @@ let chai = require('chai');
 let chaiHttp = require('chai-http');
 let server = require('../index');
 let assert = chai.assert;
+let config = require('config'); //we load the db location from the JSON files
+const PORT = config.get("SERVER.PORT");
+let db = require("../models");
+let USERS = db.users;
 
 chai.use(chaiHttp);
 
 //Our parent block
+console.log(`SERVER RUNNING ON PORT: ${PORT}`);
 describe('Authentication', function () {
+
+    before('Clear database', async function () {
+        await USERS.destroy({
+            where: {}
+        })
+    });
 
     describe('/POST /signup', function () {
         it('it should CREATE a USER', function (done) {

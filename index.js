@@ -6,33 +6,16 @@ let path = require("path");
 const cors = require("cors");
 let config = require('config'); //we load the db location from the JSON files
 const route = require('./route');
-let db = require("./models");
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require("./docs/openapi.json");
+const PORT = config.get("SERVER.PORT");
+const DATBASE = config.get("DATABASE");
+const {
+    handleError
+} = require("./error.js");
+const mysql = require('mysql2/promise');
 
-
-let PORT = config.get("SERVER.PORT")
 app.use(cors());
-
-let options = ""
-
-//db options
-if (config.util.getEnv('NODE_ENV') !== 'test') {
-    options = {
-        alter: true,
-        alter: {
-            drop: false
-        }
-    }
-} else {
-    // clear database before running test 
-    options = {
-        force: true
-    }
-}
-
-//db connection
-db.sequelize.sync(options);
 
 // Create swagger docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -61,7 +44,31 @@ app.use(express.urlencoded({
 // Routes
 route(app)
 
-app.listen(PORT);
-console.log("Listening on port " + PORT);
+// error handler
+let errorHandler = (err, req, res, next) => {
+    if (err.statusCode) {
+        return handleError(err, res);
+    };
+
+    console.error(err)
+}
+
+app.use(errorHandler);
+
+//db connection
+mysql.createConnection({
+    host: DATBASE.MYSQL_HOST,
+    user: DATBASE.MYSQL_USER,
+    password: DATBASE.MYSQL_PASSWORD,
+}).then(connection => {
+    connection.query(`CREATE DATABASE IF NOT EXISTS \`${DATBASE.MYSQL_DATABASE}\`;`).then(() => {
+        // start server
+        app.listen(PORT, () => {
+            if (config.util.getEnv('NODE_ENV') !== 'test') {
+                console.log(`SERVER RUNNING ON PORT: ${PORT}`);
+            }
+        });
+    })
+})
 
 module.exports = app; // for testing
