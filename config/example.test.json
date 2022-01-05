@@ -6,6 +6,7 @@
         "MYSQL_PASSWORD": ""
     },
     "SERVER": {
-        "PORT": 10000
+        "PORT": 10000,
+        "SECRET": ""
     }
 }

@@ -126,11 +126,8 @@ describe('Functional Tests', function () {
 
                         assert.equal(res.status, 200, "request successful");
                         assert.typeOf(res.body, "object", "response is an OBJECT");
-                        assert.typeOf(res.body.password, "string", "password should be a string");
-                        assert.lengthOf(res.body.password, pass_length, "password should be of length 64");
+                        assert.typeOf(res.body.session_id, "string", "Session_id should be a string");
                         assert.lengthOf(res.body.session_id, sess_length, "Session_id should be of length 32");
-                        assert.lengthOf(res.body.auth_key, authkey_length, "Auth_key should be of length 32");
-                        assert.lengthOf(res.body.auth_id, authId_length, "Auth_id should be of length 32");
                         assert.property(res.body, "id", "response has property Id");
                         assert.property(res.body, "email", "response has property email");
                         assert.property(res.body, "auth_key", "response has property auth_key");

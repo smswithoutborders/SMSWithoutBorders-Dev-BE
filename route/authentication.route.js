@@ -1,8 +1,11 @@
+let config = require('config'); //we load the db location from the JSON files
+const SECRET = config.get("SERVER.SECRET");
 let db = require("../models");
 const Errors = require('../error.js');
 const {
     v1: uuidv1
 } = require('uuid');
+let HashGen = require("../tools/hash_generator.js");
 
 let USERS = db.users;
 
@@ -19,8 +22,9 @@ module.exports = (app) => {
             };
             // ============================================================+
 
+            let generator = new HashGen();
             let email = req.body.email;
-            let password = req.body.password;
+            let password = generator._256(SECRET, req.body.password);
 
             await USERS.create({
                 id: uuidv1(),
@@ -69,8 +73,9 @@ module.exports = (app) => {
             };
             // ============================================================+
 
+            let generator = new HashGen();
             let email = req.body.email;
-            let password = req.body.password;
+            let password = generator._256(SECRET, req.body.password);
 
             let user = await USERS.findAll({
                 where: {
@@ -90,6 +95,12 @@ module.exports = (app) => {
             if (user.length > 1) {
                 throw new Errors.Conflict("DUPLICATE USERS");
             };
+
+            await user[0].update({
+                session_id: generator.hash(32)
+            }).catch(error => {
+                throw new Errors.InternalServerError(error);
+            });
 
             return res.status(200).json({
                 id: user[0].id,
