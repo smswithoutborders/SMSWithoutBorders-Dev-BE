@@ -108,6 +108,11 @@ describe('Functional Tests', function () {
 
         describe('/POST /signin', function () {
             it('it should AUTHENTICATE a USER', function (done) {
+                let pass_length = 64;
+                let sess_length = 32;
+                let authkey_length = 32;
+                let authId_length = 32;
+
                 chai.request(server)
                     .post('/signin')
                     .send({
@@ -121,12 +126,18 @@ describe('Functional Tests', function () {
 
                         assert.equal(res.status, 200, "request successful");
                         assert.typeOf(res.body, "object", "response is an OBJECT");
+                        assert.typeOf(res.body.password, "string", "password should be a string");
+                        assert.lengthOf(res.body.password, length, "password should be of length 64");
+                        assert.lengthOf(res.body.session_id, length, "Session_id should be of length 32");
+                        assert.lengthOf(res.body.auth_key, length, "Auth_key should be of length 32");
+                        assert.lengthOf(res.body.auth_id, length, "Auth_id should be of length 32");
                         assert.property(res.body, "id", "response has property Id");
                         assert.property(res.body, "email", "response has property email");
                         assert.property(res.body, "auth_key", "response has property auth_key");
                         assert.property(res.body, "auth_id", "response has property auth_id");
-                        assert.notProperty(res.body, "password", "response should not have property password");
                         assert.property(res.body, "session_id", "response has property session_id");
+                        assert.notProperty(res.body, "password", "response should not have property password");
+
                         done();
                     });
             });
