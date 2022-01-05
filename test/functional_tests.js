@@ -121,7 +121,7 @@ describe('Functional Tests', function () {
 
                         assert.equal(res.status, 200, "request successful");
                         assert.typeOf(res.body, "object", "response is an OBJECT");
-                        assert.property(res.body, "Id", "response has property Id");
+                        assert.property(res.body, "id", "response has property Id");
                         assert.property(res.body, "email", "response has property email");
                         assert.property(res.body, "auth_key", "response has property auth_key");
                         assert.property(res.body, "auth_id", "response has property auth_id");
@@ -163,25 +163,6 @@ describe('Functional Tests', function () {
                         }
 
                         assert.equal(res.status, 400, "request Failed");
-                        assert.typeOf(res.body, "object", "response is an OBJECT");
-                        assert.property(res.body, "message", "response has property message");
-                        done();
-                    });
-            });
-
-            it('it should FAIL with duplicate EMAIL', function (done) {
-                chai.request(server)
-                    .post('/signin')
-                    .send({
-                        email: "test@test.com",
-                        password: "testpassword"
-                    })
-                    .end((err, res) => {
-                        if (err) {
-                            return console.log(err)
-                        }
-
-                        assert.equal(res.status, 409, "request Failed");
                         assert.typeOf(res.body, "object", "response is an OBJECT");
                         assert.property(res.body, "message", "response has property message");
                         done();

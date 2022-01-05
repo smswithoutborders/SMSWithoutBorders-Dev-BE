@@ -25,7 +25,7 @@ module.exports = (app) => {
             await USERS.create({
                 id: uuidv1(),
                 email: email,
-                password: password,
+                password: password
             }).catch(error => {
                 if (error.name == "SequelizeUniqueConstraintError") {
                     if (error.original.code == "ER_DUP_ENTRY") {
@@ -45,6 +45,69 @@ module.exports = (app) => {
                 return res.status(400).send({
                     message: err.message
                 }); // 400
+            if (err instanceof Errors.Conflict)
+                return res.status(409).send({
+                    message: err.message
+                }); // 409
+            console.log(err);
+            return res.status(500).send({
+                error: err,
+                message: err.message
+            });
+        }
+    });
+
+    app.post("/signin", async (req, res) => {
+        try {
+            // ==================== REQUEST BODY CHECKS ====================
+            if (!req.body.email) {
+                throw new Errors.BadRequest("Email cannot be empty");
+            };
+
+            if (!req.body.password) {
+                throw new Errors.BadRequest("Password cannot be empty");
+            };
+            // ============================================================+
+
+            let email = req.body.email;
+            let password = req.body.password;
+
+            let user = await USERS.findAll({
+                where: {
+                    email: email,
+                    password: password
+                }
+            }).catch(error => {
+                throw new Errors.InternalServerError(error);
+            });
+
+            // INVALID USER
+            if (user.length < 1) {
+                throw new Errors.Forbidden("USER NOT FOUND");
+            };
+
+            // DUPLICATE USERS
+            if (user.length > 1) {
+                throw new Errors.Conflict("DUPLICATE USERS");
+            };
+
+            return res.status(200).json({
+                id: user[0].id,
+                email: user[0].email,
+                session_id: user[0].session_id,
+                auth_key: user[0].auth_key,
+                auth_id: user[0].auth_id
+            });
+
+        } catch (err) {
+            if (err instanceof Errors.BadRequest)
+                return res.status(400).send({
+                    message: err.message
+                }); // 400
+            if (err instanceof Errors.Forbidden)
+                return res.status(401).send({
+                    message: err.message
+                }); // 401
             if (err instanceof Errors.Conflict)
                 return res.status(409).send({
                     message: err.message
