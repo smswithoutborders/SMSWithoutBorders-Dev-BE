@@ -10,9 +10,6 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require("./docs/openapi.json");
 const PORT = config.get("SERVER.PORT");
 const DATBASE = config.get("DATABASE");
-const {
-    handleError
-} = require("./error.js");
 const mysql = require('mysql2/promise');
 
 app.use(cors());
@@ -41,20 +38,6 @@ app.use(express.urlencoded({
     extended: true
 }));
 
-// Routes
-route(app)
-
-// error handler
-let errorHandler = (err, req, res, next) => {
-    if (err.statusCode) {
-        return handleError(err, res);
-    };
-
-    console.error(err)
-}
-
-app.use(errorHandler);
-
 //db connection
 mysql.createConnection({
     host: DATBASE.MYSQL_HOST,
@@ -62,6 +45,9 @@ mysql.createConnection({
     password: DATBASE.MYSQL_PASSWORD,
 }).then(connection => {
     connection.query(`CREATE DATABASE IF NOT EXISTS \`${DATBASE.MYSQL_DATABASE}\`;`).then(() => {
+        // Routes
+        route(app)
+
         // start server
         app.listen(PORT, () => {
             if (config.util.getEnv('NODE_ENV') !== 'test') {

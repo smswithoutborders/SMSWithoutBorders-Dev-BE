@@ -1,7 +1,5 @@
 let db = require("../models");
-const {
-    ErrorHandler
-} = require('../error.js');
+const Errors = require('../error.js');
 const {
     v1: uuidv1
 } = require('uuid');
@@ -9,47 +7,53 @@ const {
 let USERS = db.users;
 
 module.exports = (app) => {
-    app.post("/signup", async (req, res, next) => {
+    app.post("/signup", async (req, res) => {
         try {
             // ==================== REQUEST BODY CHECKS ====================
             if (!req.body.email) {
-                throw new ErrorHandler(400, "Email cannot be empty");
+                throw new Errors.BadRequest("Email cannot be empty");
             };
 
             if (!req.body.password) {
-                throw new ErrorHandler(400, "Password cannot be empty");
+                throw new Errors.BadRequest("Password cannot be empty");
             };
             // ============================================================+
 
             let email = req.body.email;
             let password = req.body.password;
 
-            let user = await USERS.findAll({
-                where: {
-                    email: email
-                }
+            await USERS.create({
+                id: uuidv1(),
+                email: email,
+                password: password,
             }).catch(error => {
-                throw new ErrorHandler(500, error);
+                if (error.name == "SequelizeUniqueConstraintError") {
+                    if (error.original.code == "ER_DUP_ENTRY") {
+                        throw new Errors.Conflict("DUPLICATE USERS");
+                    };
+                };
+
+                throw new Errors.InternalServerError(error);
             });
 
-            // IF MORE THAN ONE USER EXIST IN DATABASE
-            if (user.length > 0) {
-                throw new ErrorHandler(409, "DUPLICATE USERS");
-            } else {
-                let newUser = await USERS.create({
-                    id: uuidv1(),
-                    email: email,
-                    password: password,
-                }).catch(error => {
-                    throw new ErrorHandler(500, error);
-                });
+            return res.status(200).json({
+                message: "SUCCESS"
+            })
 
-                return res.status(200).json({
-                    message: "SUCCESS"
-                })
-            };
-        } catch (error) {
-            next(error);
+        } catch (err) {
+            if (err instanceof Errors.BadRequest)
+                return res.status(400).send({
+                    message: err.message
+                }); // 400
+            if (err instanceof Errors.Conflict)
+                return res.status(409).send({
+                    message: err.message
+                }); // 409
+            console.log(err);
+            return res.status(500).send({
+                error: err,
+                message: err.message
+            });
         }
     });
 
