@@ -108,10 +108,7 @@ describe('Functional Tests', function () {
 
         describe('/POST /signin', function () {
             it('it should AUTHENTICATE a USER', function (done) {
-                let pass_length = 64;
                 let sess_length = 32;
-                let authkey_length = 32;
-                let authId_length = 32;
 
                 chai.request(server)
                     .post('/signin')
@@ -241,6 +238,88 @@ describe('Functional Tests', function () {
             assert.strictEqual(result, test, "Hash_256 should match test Hash");
             done();
         });
+    });
+
+    describe('Generator Test', function () {
+        it('/POST /users/:id/token', function (done) {
+            chai.request(server)
+                .post('/signin')
+                .send({
+                    email: "test@test.com",
+                    password: "testpassword"
+                })
+                .end((err, res) => {
+                    if (err) {
+                        return console.log(err)
+                    }
+
+                    let session_id = res.body.session_id;
+                    let id = res.body.id;
+
+                    chai.request(server)
+                        .post(`/users/${id}/token`)
+                        .send({
+                            session_id: session_id
+                        })
+                        .end((err, res) => {
+                            if (err) {
+                                return console.log(err)
+                            };
+
+                            let length = 32;
+
+                            assert.equal(res.status, 200, "request successful");
+                            assert.typeOf(res.body, "object", "response is an OBJECT");
+                            assert.typeOf(res.body.auth_id, "string", "Auth_id should be a string");
+                            assert.typeOf(res.body.auth_key, "string", "Auth_key should be a string");
+                            assert.lengthOf(res.body.auth_id, length, "Auth_id should be of length 32");
+                            assert.lengthOf(res.body.auth_key, length, "Auth_key should be of length 32");
+                            assert.property(res.body, "auth_key", "response has property auth_key");
+                            assert.property(res.body, "auth_id", "response has property auth_id");
+
+                            done();
+                        });
+                });
+        });
+
+        it('/PUT /users/:id/token', function (done) {
+            chai.request(server)
+                .post('/signin')
+                .send({
+                    email: "test@test.com",
+                    password: "testpassword"
+                })
+                .end((err, res) => {
+                    if (err) {
+                        return console.log(err)
+                    }
+
+                    let session_id = res.body.session_id;
+                    let id = res.body.id;
+
+                    chai.request(server)
+                        .put(`/users/${id}/token`)
+                        .send({
+                            session_id: session_id
+                        })
+                        .end((err, res) => {
+                            if (err) {
+                                return console.log(err)
+                            };
+
+                            let length = 32;
+
+                            assert.equal(res.status, 200, "request successful");
+                            assert.typeOf(res.body, "object", "response is an OBJECT");
+                            assert.typeOf(res.body.auth_key, "string", "Auth_key should be a string");
+                            assert.lengthOf(res.body.auth_key, length, "Auth_key should be of length 32");
+                            assert.property(res.body, "auth_key", "response has property auth_key");
+
+                            done();
+                        });
+                });
+        });
+
     });
 
 });
