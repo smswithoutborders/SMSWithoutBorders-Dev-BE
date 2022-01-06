@@ -30,7 +30,11 @@ npm install
         cp config/example.default.json config/default.json
         ```
         > This is required to run the API server
-
+    * Copy the template file "example.test.json" and rename to "test.json"
+        ```
+        cp config/example.test.json config/test.json
+        ```
+        > This is required to run the API tests 
 **Start Sever**
 ```
 npm start
@@ -43,5 +47,5 @@ npm test
 
 **API SandBox**
 ```
-<host>:9000/api-docs/
+<host>:{PORT}/api-docs/
 ```
