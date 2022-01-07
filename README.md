@@ -35,6 +35,7 @@ npm install
         cp config/example.test.json config/test.json
         ```
         > This is required to run the API tests 
+        
 **Start Sever**
 ```
 npm start
