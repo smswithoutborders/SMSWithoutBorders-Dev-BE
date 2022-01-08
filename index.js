@@ -21,6 +21,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 if (config.util.getEnv('NODE_ENV') !== 'test') {
     //use morgan to log at command line and file
     // create a write stream (in append mode)
+    if (!fs.existsSync(path.join(__dirname, 'logs'))) {
+        fs.mkdirSync(path.join(__dirname, 'logs'));
+    }
+
     var accessLogStream = fs.createWriteStream(path.join(__dirname, 'logs/access.log'), {
         flags: 'a'
     })
