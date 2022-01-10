@@ -42,8 +42,6 @@ describe('Functional Tests', function () {
                         }
 
                         assert.equal(res.status, 200, "request successful");
-                        assert.typeOf(res.body, "object", "response is an OBJECT");
-                        assert.property(res.body, "message", "response has property message");
                         done();
                     });
             });
