@@ -40,9 +40,7 @@ module.exports = (app) => {
                 throw new Errors.InternalServerError(error);
             });
 
-            return res.status(200).json({
-                message: "SUCCESS"
-            })
+            return res.status(200).json();
 
         } catch (err) {
             if (err instanceof Errors.BadRequest)
