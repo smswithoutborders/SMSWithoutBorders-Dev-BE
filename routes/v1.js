@@ -218,6 +218,8 @@ router.post("/users/:user_id/authenticate",
 
             res.cookie("SWOBDev", {
                 sid: session.sid,
+                userAgent: USER_AGENT,
+                uid: USERID,
                 cookie: session.data
             }, session.data)
 
