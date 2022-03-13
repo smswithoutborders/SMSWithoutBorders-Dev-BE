@@ -48,5 +48,5 @@ npm test
 
 **API SandBox**
 ```
-<host>:{PORT}/api-docs/
+<host>:{PORT}/{version}/api-docs/
 ```
