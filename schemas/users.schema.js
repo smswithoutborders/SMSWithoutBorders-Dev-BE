@@ -2,7 +2,7 @@ module.exports = (sequelize, Sequelize) => {
     let Users = sequelize.define("users", {
         id: {
             type: Sequelize.STRING(64),
-            defaultValue: Sequelize.UUID,
+            defaultValue: Sequelize.UUIDV1,
             primaryKey: true
         },
         email: {

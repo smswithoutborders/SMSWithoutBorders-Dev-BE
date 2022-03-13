@@ -4,7 +4,7 @@ const ERRORS = require("../error.js");
 const db = require("../schemas");
 let logger = require("../logger");
 
-var User = db.users;
+let User = db.users;
 
 module.exports = async (id) => {
     // SEARCH FOR USER IN DB
