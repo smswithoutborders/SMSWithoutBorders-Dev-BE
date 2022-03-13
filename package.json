@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "start": "node .",
+    "start": "node controllers/sync_database.js && node server.js",
     "test": "mocha --timeout 10000 --exit"
   },
   "repository": {
@@ -29,12 +29,16 @@
   },
   "dependencies": {
     "config": "^3.3.6",
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "express": "^4.17.2",
     "morgan": "^1.10.0",
     "mysql2": "^2.3.3",
     "sequelize": "^6.12.4",
+    "ssl-root-cas": "^1.3.1",
     "swagger-ui-express": "^4.3.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "winston": "^3.6.0",
+    "winston-daily-rotate-file": "^4.6.1"
   }
 }

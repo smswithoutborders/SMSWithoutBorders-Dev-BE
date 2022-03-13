@@ -1,5 +1,6 @@
-let config = require('config'); //we load the db location from the JSON files
-let DATABASE = config.get("DATABASE");
+const config = require('config');
+const SERVER = config.get("SERVER");
+
 const Sequelize = require("sequelize");
 
 module.exports = db = {};
@@ -8,8 +9,8 @@ initialize();
 
 async function initialize() {
     // connect to db
-    const sequelize = new Sequelize(DATABASE.MYSQL_DATABASE, DATABASE.MYSQL_USER, DATABASE.MYSQL_PASSWORD, {
-        host: DATABASE.MYSQL_HOST,
+    const sequelize = new Sequelize(SERVER.database.MYSQL_DATABASE, SERVER.database.MYSQL_USER, SERVER.database.MYSQL_PASSWORD, {
+        host: SERVER.database.MYSQL_HOST,
         dialect: "mysql",
         logging: false,
         // define: {
@@ -21,7 +22,10 @@ async function initialize() {
     db.sequelize = sequelize;
     db.Sequelize = Sequelize;
 
-    db.users = require("./users.model.js")(sequelize, Sequelize);
+    db.users = require("./users.schema.js")(sequelize, Sequelize);
+    db.sessions = require("./sessions.schema.js")(sequelize, Sequelize);
+
+    // https://sequelize.org/master/manual/assocs.html
 
     //db options
     const options = {
