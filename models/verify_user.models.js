@@ -3,8 +3,6 @@
 const ERRORS = require("../error.js");
 const db = require("../schemas");
 const Security = require("./security.models.js");
-const config = require('config');
-const SERVER = config.get("SERVER");
 let logger = require("../logger");
 
 let User = db.users;
