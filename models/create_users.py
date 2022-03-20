@@ -19,7 +19,7 @@ def create_user(email, password):
     except pw.IntegrityError as err:
         LOG.error(f'user {email} already has a record')
         raise Conflict()
-    except (pw.DatabaseError, Exception) as err:
+    except (pw.DatabaseError) as err:
         LOG.error(f'creating user {email} failed check logs')
         raise InternalServerError(err)
 
