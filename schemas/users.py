@@ -7,4 +7,4 @@ class Users(BaseModel):
     password = pw.CharField(null=True)
     auth_key = pw.CharField(unique=True, null=True)
     auth_id = pw.CharField(unique=True, null=True)
-    createdAt = pw.DateField(null=True)
+    createdAt = pw.DateTimeField(null=True)

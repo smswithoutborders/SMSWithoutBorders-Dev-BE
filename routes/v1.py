@@ -32,7 +32,7 @@ def signup():
         password = request.json['password']
 
         CREATE_USERS(email, password)
-        return jsonify({}), 200
+        return '', 200
     except Conflict as err:
         return str(err), 409
     except (InternalServerError, Exception) as err:

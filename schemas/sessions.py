@@ -7,4 +7,4 @@ class Sessions(BaseModel):
     user_agent = pw.CharField(null=True)
     expires = pw.DateTimeField(null=True)
     data = pw.TextField(null=True)
-    createdAt = pw.DateField(null=True)
+    createdAt = pw.DateTimeField(null=True)
