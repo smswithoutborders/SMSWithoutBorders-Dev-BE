@@ -1,6 +1,5 @@
 import logging
-from error import Conflict, InternalServerError
-from models.security import Security
+from error import InternalServerError
 from configparser import ConfigParser
 
 config = ConfigParser()
@@ -40,6 +39,6 @@ def create_session(unique_identifier, user_agent):
             "data": data
         }
     except (pw.DatabaseError) as err:
-        LOG.error(f'FAILED RO CREATE SESSION FOR {unique_identifier} CHECK LOGS')
+        LOG.error(f'FAILED TO CREATE SESSION FOR {unique_identifier} CHECK LOGS')
         raise InternalServerError(err)
 
