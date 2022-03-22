@@ -1,5 +1,4 @@
 import logging
-from unittest import result
 from error import Conflict, InternalServerError, Unauthorized
 from models.security import Security
 

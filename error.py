@@ -8,6 +8,11 @@ class Unauthorized(Exception):
         self.message = message
         super().__init__(self.message)
 
+class Forbidden(Exception):
+    def __init__(self, message='forbidden'):
+        self.message = message
+        super().__init__(self.message)
+
 class Conflict(Exception):
     def __init__(self, message='conflict'):
         self.message = message

@@ -16,8 +16,8 @@ def generate_token(uid):
         user.execute()
         LOG.info(f'SUCCESSFULLY GENERATED TOKENS FOR {uid}')
         return {
-            "authKey": auth_key,
-            "authId": auth_id
+            "auth_key": auth_key,
+            "auth_id": auth_id
         }
     except (pw.DatabaseError) as err:
         LOG.error(f'GENERATING TOKENS FOR {uid} FAILED CHECK LOGS')

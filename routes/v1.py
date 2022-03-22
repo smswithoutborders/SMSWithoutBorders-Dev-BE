@@ -2,14 +2,14 @@ import logging
 
 from flask import Blueprint, jsonify, request
 import json
-from error import BadRequest, Conflict, InternalServerError, Unauthorized
+from error import BadRequest, Conflict, Forbidden, InternalServerError, Unauthorized
 from datetime import timedelta
 from schemas.baseModel import db
 
 LOG = logging.getLogger(__name__)
 v1 = Blueprint('v1', __name__)
 
-from models import CREATE_USERS, VERIFY_USERS, CREATE_SESSION, FIND_SESSION, GENERATE_TOKEN, UPDATE_SESSION
+from models import CREATE_USERS, VERIFY_USERS, CREATE_SESSION, FIND_SESSION, GENERATE_TOKEN, UPDATE_SESSION, VERIFY_TOKEN
 
 @v1.before_request
 def before_request():
@@ -115,6 +115,58 @@ def get_tokens(user_id):
         return str(err), 400
     except Unauthorized as err:
         return str(err), 401
+    except Conflict as err:
+        return str(err), 409
+    except (InternalServerError, Exception) as err:
+        LOG.error(err)
+        return "internal server error", 500
+
+@v1.route('/users/<user_id>/authenticate', methods=['POST'])
+def authenticate(user_id):
+    try:
+        if not user_id:
+            LOG.error('no user id')
+            raise BadRequest()
+        elif not request.cookies.get("SWOBDev"):
+            LOG.error('no cookie')
+            raise Unauthorized()
+        elif not request.headers.get('User-Agent'):
+            LOG.error('no user agent')
+            raise BadRequest()
+        elif not 'auth_id' in request.json or not request.json['auth_id']:
+            LOG.error('no auth_id')
+            raise BadRequest()
+        elif not 'auth_key' in request.json or not request.json['auth_key']:
+            LOG.error('no auth_key')
+            raise BadRequest()
+        
+        str_cookie = request.cookies.get("SWOBDev")
+        str_cookie = str_cookie.replace("'", "\"")
+        str_cookie = str_cookie.replace(": False", ": \"False\"")
+        str_cookie = str_cookie.replace(": True", ": \"True\"")
+        json_cookie = json.loads(str_cookie) 
+
+        SID = json_cookie['sid']
+        UID = user_id
+        COOKIE = json_cookie['cookie']
+        user_agent = request.headers.get('User-Agent')
+        AUTH_ID = request.json['auth_id']
+        AUTH_KEY = request.json['auth_key']
+
+        ID = FIND_SESSION(SID, UID, user_agent, COOKIE)
+        userId = VERIFY_TOKEN(ID, AUTH_ID, AUTH_KEY)
+
+        session = UPDATE_SESSION(SID, userId)
+    
+        res = jsonify()
+
+        res.set_cookie("SWOBDev", str({"sid": session['sid'], "userAgent": user_agent, "uid": userId, "cookie": session['data']}), max_age=timedelta(milliseconds=session['data']['maxAge']), secure=session['data']['secure'], httponly=session['data']['httpOnly'], samesite=session['data']['sameSite'])
+
+        return res, 200
+    except BadRequest as err:
+        return str(err), 400
+    except Forbidden as err:
+        return str(err), 403
     except Conflict as err:
         return str(err), 409
     except (InternalServerError, Exception) as err:
