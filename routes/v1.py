@@ -165,6 +165,8 @@ def authenticate(user_id):
         return res, 200
     except BadRequest as err:
         return str(err), 400
+    except Unauthorized as err:
+        return str(err), 401
     except Forbidden as err:
         return str(err), 403
     except Conflict as err:
