@@ -45,3 +45,11 @@ To set up Database and API, copy the template files "example.default.ini" and re
 ```
 cp example.default.ini default.ini
 ```
+
+## How to use
+
+### Start API
+
+```bash
+python3 server.py
+```
