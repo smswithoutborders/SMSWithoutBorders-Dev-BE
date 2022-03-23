@@ -32,5 +32,6 @@ def delete_projects(uid, project_name):
         remove_project.execute()
 
         LOG.info(f"SUCCESSFULLY UNSUBSCRIBED {uid} FOR {project_name}")
+        return True
     except (pw.DatabaseError) as err:
         raise InternalServerError(err)
