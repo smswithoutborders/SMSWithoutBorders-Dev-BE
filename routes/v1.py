@@ -19,6 +19,7 @@ from models import (
     VERIFY_TOKEN,
     FIND_USER_PROJECT,
     ADD_PROJECT,
+    DELETE_PROJECT,
 )
 
 
@@ -307,6 +308,62 @@ def add_projext(user_id, project_name):
         )
 
         return res, 200
+    except BadRequest as err:
+        return str(err), 400
+    except Unauthorized as err:
+        return str(err), 401
+    except Forbidden as err:
+        return str(err), 403
+    except Conflict as err:
+        return str(err), 409
+    except (InternalServerError, Exception) as err:
+        LOG.error(err)
+        return "internal server error", 500
+
+
+@v1.route("/users/<user_id>/projects/<project_name>", methods=["DELETE"])
+def delete_projext(user_id, project_name):
+    try:
+        if not user_id:
+            LOG.error("no user id")
+            raise BadRequest()
+        elif not project_name:
+            LOG.error("no project name")
+            raise BadRequest()
+        elif not request.cookies.get("SWOBDev"):
+            LOG.error("no cookie")
+            raise Unauthorized()
+        elif not request.headers.get("User-Agent"):
+            LOG.error("no user agent")
+            raise BadRequest()
+
+        str_cookie = request.cookies.get("SWOBDev")
+        json_cookie = json.loads(str_cookie)
+
+        SID = json_cookie["sid"]
+        UID = user_id
+        PROJECT_NAME = project_name
+        COOKIE = json_cookie["cookie"]
+        user_agent = request.headers.get("User-Agent")
+
+        ID = FIND_SESSION(SID, UID, user_agent, COOKIE)
+        DELETE_PROJECT(ID, PROJECT_NAME)
+
+        session = UPDATE_SESSION(SID, ID)
+
+        res = jsonify()
+
+        res.set_cookie(
+            "SWOBDev",
+            json.dumps({"sid": session["sid"], "cookie": session["data"]}),
+            max_age=timedelta(milliseconds=session["data"]["maxAge"]),
+            secure=session["data"]["secure"],
+            httponly=session["data"]["httpOnly"],
+            samesite=session["data"]["sameSite"],
+        )
+
+        return res, 200
+        return str(test), 200
     except BadRequest as err:
         return str(err), 400
     except Unauthorized as err:

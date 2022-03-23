@@ -7,3 +7,4 @@ from models.update_sessions import update_session as UPDATE_SESSION
 from models.verify_tokens import verify_token as VERIFY_TOKEN
 from models.find_users_projects import find_users_projects as FIND_USER_PROJECT
 from models.add_projects import add_projects as ADD_PROJECT
+from models.delete_projects import delete_projects as DELETE_PROJECT
