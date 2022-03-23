@@ -79,7 +79,7 @@ def login():
         res = jsonify(user)
         res.set_cookie(
             "SWOBDev",
-            str({"sid": session["sid"], "cookie": session["data"]}),
+            json.dumps({"sid": session["sid"], "cookie": session["data"]}),
             max_age=timedelta(milliseconds=session["data"]["maxAge"]),
             secure=session["data"]["secure"],
             httponly=session["data"]["httpOnly"],
@@ -112,9 +112,6 @@ def get_tokens(user_id):
             raise BadRequest()
 
         str_cookie = request.cookies.get("SWOBDev")
-        str_cookie = str_cookie.replace("'", '"')
-        str_cookie = str_cookie.replace(": False", ': "False"')
-        str_cookie = str_cookie.replace(": True", ': "True"')
         json_cookie = json.loads(str_cookie)
 
         SID = json_cookie["sid"]
@@ -131,7 +128,7 @@ def get_tokens(user_id):
 
         res.set_cookie(
             "SWOBDev",
-            str({"sid": session["sid"], "cookie": session["data"]}),
+            json.dumps({"sid": session["sid"], "cookie": session["data"]}),
             max_age=timedelta(milliseconds=session["data"]["maxAge"]),
             secure=session["data"]["secure"],
             httponly=session["data"]["httpOnly"],
@@ -170,9 +167,6 @@ def authenticate(user_id):
             raise BadRequest()
 
         str_cookie = request.cookies.get("SWOBDev")
-        str_cookie = str_cookie.replace("'", '"')
-        str_cookie = str_cookie.replace(": False", ': "False"')
-        str_cookie = str_cookie.replace(": True", ': "True"')
         json_cookie = json.loads(str_cookie)
 
         SID = json_cookie["sid"]
@@ -191,7 +185,7 @@ def authenticate(user_id):
 
         res.set_cookie(
             "SWOBDev",
-            str(
+            json.dumps(
                 {
                     "sid": session["sid"],
                     "userAgent": user_agent,
@@ -233,9 +227,6 @@ def get_projexts(user_id):
             raise BadRequest()
 
         str_cookie = request.cookies.get("SWOBDev")
-        str_cookie = str_cookie.replace("'", '"')
-        str_cookie = str_cookie.replace(": False", ': "False"')
-        str_cookie = str_cookie.replace(": True", ': "True"')
         json_cookie = json.loads(str_cookie)
 
         SID = json_cookie["sid"]
@@ -252,7 +243,7 @@ def get_projexts(user_id):
 
         res.set_cookie(
             "SWOBDev",
-            str({"sid": session["sid"], "cookie": session["data"]}),
+            json.dumps({"sid": session["sid"], "cookie": session["data"]}),
             max_age=timedelta(milliseconds=session["data"]["maxAge"]),
             secure=session["data"]["secure"],
             httponly=session["data"]["httpOnly"],
