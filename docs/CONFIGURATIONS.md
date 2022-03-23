@@ -12,6 +12,14 @@
 - [Python](https://www.python.org/) (version >= [3.8.10](https://www.python.org/downloads/release/python-3810/))
 - [Python Virtual Environments](https://docs.python.org/3/tutorial/venv.html)
 
+## Dependencies
+
+On Ubuntu **libmysqlclient-dev** is required
+
+```
+sudo apt install python3-dev libmysqlclient-dev
+```
+
 ## Installation
 
 Create a Virtual Environments **(venv)**
