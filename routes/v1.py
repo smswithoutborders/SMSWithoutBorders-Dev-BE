@@ -149,7 +149,7 @@ def get_tokens(user_id):
         return "internal server error", 500
 
 
-@v1.route("/users/<user_id>/authenticate", methods=["POST"])
+@v1.route("/authenticate", methods=["POST"])
 def authenticate(user_id):
     try:
         if not user_id:
@@ -215,7 +215,7 @@ def authenticate(user_id):
         return "internal server error", 500
 
 
-@v1.route("/users/<user_id>/projects", methods=["GET"])
+@v1.route("/users/<user_id>/products", methods=["GET"])
 def get_projexts(user_id):
     try:
         if not user_id:
@@ -266,13 +266,13 @@ def get_projexts(user_id):
         return "internal server error", 500
 
 
-@v1.route("/users/<user_id>/projects/<project_name>", methods=["POST"])
-def add_projext(user_id, project_name):
+@v1.route("/users/<user_id>/products/<product_name>", methods=["POST"])
+def add_projext(user_id, product_name):
     try:
         if not user_id:
             LOG.error("no user id")
             raise BadRequest()
-        elif not project_name:
+        elif not product_name:
             LOG.error("no project name")
             raise BadRequest()
         elif not request.cookies.get("SWOBDev"):
@@ -287,7 +287,7 @@ def add_projext(user_id, project_name):
 
         SID = json_cookie["sid"]
         UID = user_id
-        PROJECT_NAME = project_name
+        PROJECT_NAME = product_name
         COOKIE = json_cookie["cookie"]
         user_agent = request.headers.get("User-Agent")
 
@@ -321,13 +321,13 @@ def add_projext(user_id, project_name):
         return "internal server error", 500
 
 
-@v1.route("/users/<user_id>/projects/<project_name>", methods=["DELETE"])
-def delete_projext(user_id, project_name):
+@v1.route("/users/<user_id>/products/<product_name>", methods=["DELETE"])
+def delete_projext(user_id, product_name):
     try:
         if not user_id:
             LOG.error("no user id")
             raise BadRequest()
-        elif not project_name:
+        elif not product_name:
             LOG.error("no project name")
             raise BadRequest()
         elif not request.cookies.get("SWOBDev"):
@@ -342,7 +342,7 @@ def delete_projext(user_id, project_name):
 
         SID = json_cookie["sid"]
         UID = user_id
-        PROJECT_NAME = project_name
+        PROJECT_NAME = product_name
         COOKIE = json_cookie["cookie"]
         user_agent = request.headers.get("User-Agent")
 
