@@ -4,3 +4,4 @@ Flask==2.0.3
 mysql-connector-python==8.0.28
 mysqlclient==2.1.0
 flask-swagger-ui==3.36.0
+requests==2.27.1
