@@ -53,7 +53,10 @@ def signup():
         return str(err), 400
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError, Exception) as err:
+    except (InternalServerError) as err:
+        LOG.error(err)
+        return "internal server error", 500
+    except (Exception) as err:
         LOG.error(err)
         return "internal server error", 500
 
@@ -95,7 +98,10 @@ def login():
         return str(err), 401
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError, Exception) as err:
+    except (InternalServerError) as err:
+        LOG.error(err)
+        return "internal server error", 500
+    except (Exception) as err:
         LOG.error(err)
         return "internal server error", 500
 
@@ -144,7 +150,10 @@ def get_tokens(user_id):
         return str(err), 401
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError, Exception) as err:
+    except (InternalServerError) as err:
+        LOG.error(err)
+        return "internal server error", 500
+    except (Exception) as err:
         LOG.error(err)
         return "internal server error", 500
 
@@ -196,7 +205,10 @@ def authenticate():
         return str(err), 403
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError, Exception) as err:
+    except (InternalServerError) as err:
+        LOG.error(err)
+        return "internal server error", 500
+    except (Exception) as err:
         LOG.error(err)
         return "internal server error", 500
 
@@ -247,7 +259,10 @@ def get_projexts(user_id):
         return str(err), 403
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError, Exception) as err:
+    except (InternalServerError) as err:
+        LOG.error(err)
+        return "internal server error", 500
+    except (Exception) as err:
         LOG.error(err)
         return "internal server error", 500
 
@@ -302,7 +317,10 @@ def add_projext(user_id, product_name):
         return str(err), 403
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError, Exception) as err:
+    except (InternalServerError) as err:
+        LOG.error(err)
+        return "internal server error", 500
+    except (Exception) as err:
         LOG.error(err)
         return "internal server error", 500
 
@@ -358,6 +376,9 @@ def delete_projext(user_id, product_name):
         return str(err), 403
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError, Exception) as err:
+    except (InternalServerError) as err:
+        LOG.error(err)
+        return "internal server error", 500
+    except (Exception) as err:
         LOG.error(err)
         return "internal server error", 500

@@ -62,17 +62,22 @@ def add_projects(uid, project_name):
                     LOG.error("INVALID SETUP CREDENTIALS")
                     raise Unauthorized()
                 elif response.status_code == 200:
-                    pass
+                    Users_projects.create(user_id=uid, project_id=pid)
+                    LOG.info(f"SUCCESSFULLY SUBSCRIBED {uid} FOR {project_name}")
+                    return True
+                else:
+                    LOG.error(
+                        f"OPENAPI SERVER FAILED WITH STATUS CODE {response.status_code}"
+                    )
+                    raise InternalServerError(response.text)
             else:
                 LOG.error("INVALID PRODUCT")
                 raise Forbidden()
-
-            Users_projects.create(user_id=uid, project_id=pid)
-            LOG.info(f"SUCCESSFULLY SUBSCRIBED {uid} FOR {project_name}")
-            return True
 
         LOG.error(f"{uid} ALREADY SUBSCRIBED FOR {project_name}")
         raise Conflict()
 
     except (pw.DatabaseError) as err:
+        raise InternalServerError(err)
+    except Exception as err:
         raise InternalServerError(err)
