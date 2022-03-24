@@ -1,9 +1,7 @@
 import logging
-from error import Conflict, Forbidden, InternalServerError
+from error import Conflict, InternalServerError, Unauthorized
 
 import peewee as pw
-from uuid import uuid1
-from datetime import datetime
 from schemas import Users
 
 LOG = logging.getLogger(__name__)
@@ -29,7 +27,7 @@ def verify_token(auth_id, auth_key):
         # check for no user
         if len(result) < 1:
             LOG.error(f"No token found")
-            raise Forbidden()
+            raise Unauthorized()
 
         LOG.info(f"SUCCESSFULLY VERIFIED TOKENS")
         return str(result[0]["id"])
