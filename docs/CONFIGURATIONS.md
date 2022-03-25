@@ -46,12 +46,22 @@ All configuration files are found in the **[.config](../.config)** directory.
 
 ### Development configurations
 
-**[default.json](../.config/example.default.ini)** is the configuration file for a development.
+**[default.ini](../.config/example.default.ini)** is the configuration file for a development.
 
 To set up Database and API, copy the template files "example.default.ini" and rename to "default.ini"
 
 ```
 cp example.default.ini default.ini
+```
+
+### Access configurations
+
+**[setup.ini](../example.setup.ini)** is the access file.
+
+To set up access, copy the template files "example.setup.ini" and rename to "setup.ini"
+
+```
+cp example.setup.ini setup.ini
 ```
 
 ## How to use
