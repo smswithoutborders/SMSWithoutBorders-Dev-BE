@@ -1,3 +1,3 @@
 # Available API Versions
 
-- [APIv2](./FEATURES_v1.md)
+- [APIv1](./FEATURES_v1.md)
