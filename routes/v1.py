@@ -214,7 +214,7 @@ def authenticate():
 
 
 @v1.route("/users/<user_id>/products", methods=["GET"])
-def get_projexts(user_id):
+def get_projects(user_id):
     try:
         if not user_id:
             LOG.error("no user id")
@@ -268,7 +268,7 @@ def get_projexts(user_id):
 
 
 @v1.route("/users/<user_id>/products/<product_name>", methods=["POST"])
-def add_projext(user_id, product_name):
+def add_project(user_id, product_name):
     try:
         if not user_id:
             LOG.error("no user id")
@@ -326,7 +326,7 @@ def add_projext(user_id, product_name):
 
 
 @v1.route("/users/<user_id>/products/<product_name>", methods=["DELETE"])
-def delete_projext(user_id, product_name):
+def delete_project(user_id, product_name):
     try:
         if not user_id:
             LOG.error("no user id")
@@ -367,7 +367,6 @@ def delete_projext(user_id, product_name):
         )
 
         return res, 200
-        return str(test), 200
     except BadRequest as err:
         return str(err), 400
     except Unauthorized as err:

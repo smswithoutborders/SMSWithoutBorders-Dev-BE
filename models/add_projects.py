@@ -65,6 +65,9 @@ def add_projects(uid, project_name):
                     Users_projects.create(user_id=uid, project_id=pid)
                     LOG.info(f"SUCCESSFULLY SUBSCRIBED {uid} FOR {project_name}")
                     return True
+                elif response.status_code == 409:
+                    LOG.error(f"USER {uid} IS ALREADY SUBSCRIBED FOR {project_name}")
+                    raise Conflict()
                 else:
                     LOG.error(
                         f"OPENAPI SERVER FAILED WITH STATUS CODE {response.status_code}"
@@ -77,7 +80,5 @@ def add_projects(uid, project_name):
         LOG.error(f"{uid} ALREADY SUBSCRIBED FOR {project_name}")
         raise Conflict()
 
-    except (pw.DatabaseError) as err:
-        raise InternalServerError(err)
-    except Exception as err:
+    except pw.DatabaseError as err:
         raise InternalServerError(err)

@@ -1,6 +1,6 @@
 import logging
 
-from error import Unauthorized, Forbidden, InternalServerError
+from error import Conflict, Unauthorized, Forbidden, InternalServerError
 
 import peewee as pw
 from schemas import Users_projects, Projects, Users
@@ -81,6 +81,4 @@ def delete_projects(uid, project_name):
             LOG.error("INVALID PRODUCT")
             raise Forbidden()
     except (pw.DatabaseError) as err:
-        raise InternalServerError(err)
-    except Exception as err:
         raise InternalServerError(err)
