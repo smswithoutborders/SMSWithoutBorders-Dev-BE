@@ -30,7 +30,7 @@ def add_projects(uid, project_name):
 
         try:
             Users_projects.get(
-                Users_projects.user_id == uid, Users_projects.project_id == pid
+                Users_projects.user_id == uid, Users_projects.product_id == pid
             )
         except Users_projects.DoesNotExist:
             LOG.debug(f"requesting for {project_name}'s subscription for {uid} ...")
