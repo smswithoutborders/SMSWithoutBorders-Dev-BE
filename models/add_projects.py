@@ -62,7 +62,7 @@ def add_projects(uid, project_name):
                     LOG.error("INVALID SETUP CREDENTIALS")
                     raise Unauthorized()
                 elif response.status_code == 200:
-                    Users_projects.create(user_id=uid, project_id=pid)
+                    Users_projects.create(user_id=uid, product_id=pid)
                     LOG.info(f"SUCCESSFULLY SUBSCRIBED {uid} FOR {project_name}")
                     return True
                 elif response.status_code == 409:
