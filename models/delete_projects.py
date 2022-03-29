@@ -30,7 +30,7 @@ def delete_projects(uid, project_name):
 
         try:
             project = Users_projects.get(
-                Users_projects.user_id == uid, Users_projects.project_id == pid
+                Users_projects.user_id == uid, Users_projects.product_id == pid
             )
         except Users_projects.DoesNotExist:
             LOG.error(f"User is not subscribed for {project_name}")
@@ -66,7 +66,7 @@ def delete_projects(uid, project_name):
                 raise Unauthorized()
             elif response.status_code == 200:
                 remove_project = project.delete().where(
-                    Users_projects.user_id == uid, Users_projects.project_id == pid
+                    Users_projects.user_id == uid, Users_projects.product_id == pid
                 )
                 remove_project.execute()
 
