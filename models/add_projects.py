@@ -1,6 +1,6 @@
 import logging
 
-from error import Conflict, Forbidden, InternalServerError, Unauthorized
+from error import BadRequest, Conflict, Forbidden, InternalServerError, Unauthorized
 
 import peewee as pw
 import requests
@@ -68,6 +68,9 @@ def add_projects(uid, project_name):
                 elif response.status_code == 409:
                     LOG.error(f"USER {uid} IS ALREADY SUBSCRIBED FOR {project_name}")
                     raise Conflict()
+                elif response.status_code == 400:
+                    LOG.error(f"INCOMPLETE DATA. CHECK YOUR REQUEST BODY")
+                    raise BadRequest()
                 else:
                     LOG.error(
                         f"OPENAPI SERVER FAILED WITH STATUS CODE {response.status_code}"
