@@ -3,7 +3,7 @@ import logging
 from error import Conflict, Unauthorized, Forbidden, InternalServerError
 
 import peewee as pw
-from schemas import Users_projects, Projects, Users
+from schemas import Users_projects, Products, Users
 from products import openapi
 import requests
 
@@ -17,8 +17,8 @@ def delete_projects(uid, project_name):
         LOG.debug(f"checking {uid}'s project status for {project_name}...")
 
         try:
-            pid = Projects.get(Projects.name == project_name)
-        except Projects.DoesNotExist:
+            pid = Products.get(Products.name == project_name)
+        except Products.DoesNotExist:
             LOG.error("INVALID PROJECT")
             raise Forbidden()
 

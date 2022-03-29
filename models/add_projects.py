@@ -4,7 +4,7 @@ from error import BadRequest, Conflict, Forbidden, InternalServerError, Unauthor
 
 import peewee as pw
 import requests
-from schemas import Users_projects, Projects, Users
+from schemas import Users_projects, Products, Users
 from products import openapi
 
 from configparser import ConfigParser
@@ -17,8 +17,8 @@ def add_projects(uid, project_name):
         LOG.debug(f"checking {uid}'s project status for {project_name}...")
 
         try:
-            pid = Projects.get(Projects.name == project_name)
-        except Projects.DoesNotExist:
+            pid = Products.get(Products.name == project_name)
+        except Products.DoesNotExist:
             LOG.error("INVALID PRODUCT")
             raise Forbidden()
 

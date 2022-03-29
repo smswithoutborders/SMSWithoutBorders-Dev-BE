@@ -28,14 +28,28 @@ except Error as e:
 from schemas.baseModel import db
 from schemas.users import Users
 from schemas.sessions import Sessions
-from schemas.projects import Projects
+from schemas.projects import Products
 from schemas.users_projects import Users_projects
 
 
 def create_tables():
     LOG.debug(f"Syncing database {database['MYSQL_DATABASE']} ...")
-    db.create_tables([Users, Sessions, Projects, Users_projects])
+    db.create_tables([Users, Sessions, Products, Users_projects])
 
-    Projects.get_or_create(name="openapi")
+    product_info = ConfigParser()
+    product_info.read("./products_info.ini")
+
+    openApi_info = product_info["OPENAPI"]
+
+    try:
+        Products.get(Products.name == openApi_info["name"])
+    except Products.DoesNotExist:
+        LOG.debug(f"Adding product {openApi_info['name']} ...")
+        Products.create(
+            name=openApi_info["name"],
+            label=openApi_info["label"],
+            description=openApi_info["description"],
+            documentation=openApi_info["documentation"],
+        )
 
     LOG.info(f"Successfully Sync database {database['MYSQL_DATABASE']}")

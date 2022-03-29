@@ -3,7 +3,7 @@ import logging
 from error import InternalServerError
 
 import peewee as pw
-from schemas import Users_projects, Projects, Users
+from schemas import Users_projects, Products, Users
 from schemas.baseModel import db
 
 LOG = logging.getLogger(__name__)
@@ -16,23 +16,35 @@ def find_users_projects(uid):
 
         LOG.debug(f"fetching unsubscribed projects for {uid}...")
         unsub_cursor = db.execute_sql(
-            f'SELECT t1.id, t1.name FROM projects t1 LEFT JOIN (SELECT * FROM users_projects WHERE users_projects.user_id = "{uid}") AS t2 ON t2.project_id = t1.id WHERE t2.project_id IS NULL'
+            f'SELECT t1.id, t1.name, t1.label, t1.description, t1.documentation FROM products t1 LEFT JOIN (SELECT * FROM users_projects WHERE users_projects.user_id = "{uid}") AS t2 ON t2.product_id = t1.id WHERE t2.product_id IS NULL'
         )
 
         for row in unsub_cursor.fetchall():
-            unsub_project = {"id": row[0], "name": row[1]}
+            unsub_project = {
+                "id": row[0],
+                "name": row[1],
+                "label": row[2],
+                "description": row[3],
+                "documentation": row[4],
+            }
             unsubscribed.append(unsub_project)
 
-        LOG.debug(f"fetching subscribed projects for {uid}...")
+        LOG.debug(f"fetching subscribed products for {uid}...")
         sub_cursor = (
-            Projects.select().join(Users_projects).join(Users).where(Users.id == uid)
+            Products.select().join(Users_projects).join(Users).where(Users.id == uid)
         )
 
         for row in sub_cursor:
-            sub_project = {"id": row.id, "name": row.name}
+            sub_project = {
+                "id": row.id,
+                "name": row.name,
+                "description": row.description,
+                "label": row.label,
+                "documentation": row.documentation,
+            }
             subscribed.append(sub_project)
 
-        LOG.info(f"SUCCESSFULLY GATHERED {uid} PROJECTS")
+        LOG.info(f"SUCCESSFULLY GATHERED {uid} PRODUCTS")
         return {"unsubscribed": unsubscribed, "subscribed": subscribed}
 
     except (pw.DatabaseError) as err:
