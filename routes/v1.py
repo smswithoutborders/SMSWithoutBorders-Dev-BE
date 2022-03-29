@@ -47,7 +47,8 @@ def signup():
         email = request.json["email"]
         password = request.json["password"]
 
-        CREATE_USERS(email, password)
+        ID = CREATE_USERS(email, password)
+        GENERATE_TOKEN(ID)
         return "", 200
     except BadRequest as err:
         return str(err), 400
