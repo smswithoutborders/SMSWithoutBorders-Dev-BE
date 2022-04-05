@@ -1,6 +1,6 @@
 import logging
 
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 from configparser import ConfigParser
 from mysql.connector import connect, Error
@@ -18,9 +18,9 @@ try:
     ) as connection:
         create_db_query = f"CREATE DATABASE IF NOT EXISTS {database['MYSQL_DATABASE']};"
         with connection.cursor() as cursor:
-            LOG.debug(f"Creating database {database['MYSQL_DATABASE']} ...")
+            logger.debug(f"Creating database {database['MYSQL_DATABASE']} ...")
             cursor.execute(create_db_query)
-            LOG.info(f"Database {database['MYSQL_DATABASE']} successfully created")
+            logger.info(f"Database {database['MYSQL_DATABASE']} successfully created")
 except Error as e:
     print(e)
     raise
@@ -33,7 +33,7 @@ from schemas.users_projects import Users_projects
 
 
 def create_tables():
-    LOG.debug(f"Syncing database {database['MYSQL_DATABASE']} ...")
+    logger.debug(f"Syncing database {database['MYSQL_DATABASE']} ...")
     db.create_tables([Users, Sessions, Products, Users_projects])
 
     product_info = ConfigParser()
@@ -44,7 +44,7 @@ def create_tables():
     try:
         Products.get(Products.name == openApi_info["name"])
     except Products.DoesNotExist:
-        LOG.debug(f"Adding product {openApi_info['name']} ...")
+        logger.debug(f"Adding product {openApi_info['name']} ...")
         Products.create(
             name=openApi_info["name"],
             label=openApi_info["label"],
@@ -52,4 +52,4 @@ def create_tables():
             documentation=openApi_info["documentation"],
         )
 
-    LOG.info(f"Successfully Sync database {database['MYSQL_DATABASE']}")
+    logger.info(f"Successfully Sync database {database['MYSQL_DATABASE']}")

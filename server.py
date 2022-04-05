@@ -1,16 +1,16 @@
-import logging
 from flask import Flask
 from configparser import ConfigParser
 from routes.v1 import v1
 from schemas import create_tables
 from flask_swagger_ui import get_swaggerui_blueprint
+from logger import logger
+
+logger()
 
 config = ConfigParser()
 config.read(".config/default.ini")
 
 api = config["API"]
-
-logging.basicConfig(level=logging.DEBUG)
 
 create_tables()
 
