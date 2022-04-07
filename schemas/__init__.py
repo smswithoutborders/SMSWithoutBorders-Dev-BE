@@ -15,6 +15,7 @@ try:
         user=database["MYSQL_USER"],
         password=database["MYSQL_PASSWORD"],
         host=database["MYSQL_HOST"],
+        auth_plugin="mysql_native_password"
     ) as connection:
         create_db_query = f"CREATE DATABASE IF NOT EXISTS {database['MYSQL_DATABASE']};"
         with connection.cursor() as cursor:
