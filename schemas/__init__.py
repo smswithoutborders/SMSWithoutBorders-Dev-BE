@@ -1,4 +1,5 @@
 import logging
+from contextlib import closing
 
 logger = logging.getLogger(__name__)
 
@@ -12,14 +13,16 @@ config = configuration()
 database = config["DATABASE"]
 
 try:
-    with connect(
-        user=database["MYSQL_USER"],
-        password=database["MYSQL_PASSWORD"],
-        host=database["MYSQL_HOST"],
-        auth_plugin="mysql_native_password",
+    with closing(
+        connect(
+            user=database["MYSQL_USER"],
+            password=database["MYSQL_PASSWORD"],
+            host=database["MYSQL_HOST"],
+            auth_plugin="mysql_native_password",
+        )
     ) as connection:
         create_db_query = f"CREATE DATABASE IF NOT EXISTS {database['MYSQL_DATABASE']};"
-        with connection.cursor() as cursor:
+        with closing(connection.cursor()) as cursor:
             logger.debug(f"Creating database {database['MYSQL_DATABASE']} ...")
             cursor.execute(create_db_query)
             logger.info(f"Database {database['MYSQL_DATABASE']} successfully created")
