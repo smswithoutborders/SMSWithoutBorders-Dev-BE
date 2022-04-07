@@ -1,16 +1,16 @@
 import hashlib
 import hmac
-from configparser import ConfigParser
+from config_init import configuration
 
-config = ConfigParser()
-config.read('.config/default.ini')
-api = config['API']
-salt = api['SALT']
+config = configuration()
+api = config["API"]
+salt = api["SALT"]
 
-class Security():
+
+class Security:
     def __init__(self) -> None:
         pass
 
     def hash(data):
-        hash_data = hmac.new(salt.encode('utf-8'), data.encode('utf-8'), hashlib.sha512)
+        hash_data = hmac.new(salt.encode("utf-8"), data.encode("utf-8"), hashlib.sha512)
         return str(hash_data.hexdigest())

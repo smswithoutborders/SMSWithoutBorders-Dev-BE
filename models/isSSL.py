@@ -1,8 +1,7 @@
 from os.path import exists
-from configparser import ConfigParser
+from config_init import configuration
 
-config = ConfigParser()
-config.read(".config/default.ini")
+config = configuration()
 
 SSL = config["SSL_API"]
 

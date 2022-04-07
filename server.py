@@ -2,20 +2,17 @@ import logging
 import ssl
 
 from flask import Flask
-from configparser import ConfigParser
 from routes.v1 import v1
 from schemas import create_tables
 from flask_swagger_ui import get_swaggerui_blueprint
 from logger import logger
 from models.isSSL import isSSL
+from config_init import configuration
 
 logger()
 server_logger = logging.getLogger(__name__)
 
-config = ConfigParser()
-config_filepath = os.path.join(os.path.dirname(__file__), '.config', 'default.ini')
-config.read(config_filepath)
-
+config = configuration()
 api = config["API"]
 SSL = config["SSL_API"]
 
