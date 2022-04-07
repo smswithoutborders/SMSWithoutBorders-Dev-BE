@@ -13,7 +13,8 @@ logger()
 server_logger = logging.getLogger(__name__)
 
 config = ConfigParser()
-config.read(".config/default.ini")
+config_filepath = os.path.join(os.path.dirname(__file__), '.config', 'default.ini')
+config.read(config_filepath)
 
 api = config["API"]
 SSL = config["SSL_API"]
