@@ -24,8 +24,7 @@ try:
             cursor.execute(create_db_query)
             logger.info(f"Database {database['MYSQL_DATABASE']} successfully created")
 except Error as e:
-    print(e)
-    raise
+    raise e
 
 from schemas.baseModel import db
 from schemas.users import Users
