@@ -7,7 +7,9 @@ from schemas import Users_projects, Products, Users
 from products import openapi
 import requests
 
-from configparser import ConfigParser
+from config_init import configuration
+
+config = configuration()
 
 LOG = logging.getLogger(__name__)
 
@@ -41,9 +43,7 @@ def delete_projects(uid, project_name):
         AUTH_ID = user.auth_id
         AUTH_KEY = user.auth_key
 
-        setup = ConfigParser()
-        setup.read("setup.ini")
-        SETUP = setup["CREDENTIALS"]
+        SETUP = config["SETUP_CREDS"]
         SETUP_ID = SETUP["ID"]
         SETUP_KEY = SETUP["key"]
 

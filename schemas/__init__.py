@@ -4,7 +4,6 @@ from contextlib import closing
 logger = logging.getLogger(__name__)
 
 from mysql.connector import connect, Error
-from configparser import ConfigParser
 
 from config_init import configuration
 
@@ -40,10 +39,7 @@ def create_tables():
     logger.debug(f"Syncing database {database['MYSQL_DATABASE']} ...")
     db.create_tables([Users, Sessions, Products, Users_projects])
 
-    product_info = ConfigParser()
-    product_info.read("./products_info.ini")
-
-    openApi_info = product_info["OPENAPI"]
+    openApi_info = config["OPENAPI_INFO"]
 
     try:
         Products.get(Products.name == openApi_info["name"])
