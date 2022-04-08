@@ -3,6 +3,10 @@ import ssl
 
 from flask import Flask
 from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
+
 from routes.v1 import v1
 from schemas import create_tables
 from flask_swagger_ui import get_swaggerui_blueprint
@@ -18,9 +22,6 @@ api = config["API"]
 SSL = config["SSL_API"]
 
 create_tables()
-
-app = Flask(__name__)
-CORS(app)
 
 swaggerui_blueprint = get_swaggerui_blueprint(
     "/v1/api-docs", "/static/v1-api-docs.json"
