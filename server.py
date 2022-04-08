@@ -5,7 +5,11 @@ from flask import Flask
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, support_credentials=True)
+CORS(
+    app,
+    origin=["https://developers.smswithoutborders.com:13000"],
+    support_credentials=True,
+)
 
 from routes.v1 import v1
 from schemas import create_tables
