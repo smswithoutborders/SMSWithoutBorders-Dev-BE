@@ -7,8 +7,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(
     app,
-    origin=["https://developers.smswithoutborders.com:13000"],
-    support_credentials=True,
+    origins=["https://developers.smswithoutborders.com:13000"],
+    supports_credentials=True,
 )
 
 from routes.v1 import v1
