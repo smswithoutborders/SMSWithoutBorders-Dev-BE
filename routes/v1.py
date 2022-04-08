@@ -23,9 +23,9 @@ from models import (
 )
 
 
-@v1.before_request
-def before_request():
-    db.connect()
+# @v1.before_request
+# def before_request():
+#     db.connect()
 
 
 @v1.after_request
