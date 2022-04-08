@@ -5,9 +5,16 @@ from flask import Flask
 from flask_cors import CORS
 
 app = Flask(__name__)
+
+from config_init import configuration
+
+config = configuration()
+api = config["API"]
+SSL = config["SSL_API"]
+
 CORS(
     app,
-    origins=["https://developers.smswithoutborders.com:13000"],
+    origins=api["ORIGINS"],
     supports_credentials=True,
 )
 
@@ -16,14 +23,9 @@ from schemas import create_tables
 from flask_swagger_ui import get_swaggerui_blueprint
 from logger import logger
 from models.isSSL import isSSL
-from config_init import configuration
 
 logger()
 server_logger = logging.getLogger(__name__)
-
-config = configuration()
-api = config["API"]
-SSL = config["SSL_API"]
 
 create_tables()
 
