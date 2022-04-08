@@ -5,7 +5,7 @@ from flask import Flask
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, support_credentials=True)
 
 from routes.v1 import v1
 from schemas import create_tables
