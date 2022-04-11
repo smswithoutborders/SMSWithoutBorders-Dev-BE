@@ -76,6 +76,15 @@ PORT: The port number the product connects to.
 
 VERSION: The version number of the product you’re trying to connect to. Prefix the version number with a “v”. Example v1, v2, e.t.c
 
+### Add Products to database
+
+New products are fetched from **[products_info.ini](../products_info.ini)** and added to the database the first time the server starts. Each product's name is a section in the **[products_info.ini](../products_info.ini)** file and it's metadata contains:
+
+name = The name of the Product
+label = The Display name for the Product
+description = The Product's description
+documentation = The Product's documentation
+
 ## How to use
 
 ### Start API
