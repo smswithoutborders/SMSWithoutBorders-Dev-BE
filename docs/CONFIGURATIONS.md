@@ -64,6 +64,18 @@ To set up access, copy the template files "example.setup.ini" and rename to "set
 cp example.setup.ini setup.ini
 ```
 
+### Products configurations
+
+Products are classes found in **[products.py](../products.py)**.
+
+To set up products set:
+
+HOST: The url pointing to the product (without port number)
+
+PORT: The port number the product connects to.
+
+VERSION: The version number of the product you’re trying to connect to. Prefix the version number with a “v”. Example v1, v2, e.t.c
+
 ## How to use
 
 ### Start API
