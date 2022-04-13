@@ -1,10 +1,10 @@
-from models.create_users import create_user as CREATE_USERS
-from models.verify_users import verify_user as VERIFY_USERS
-from models.create_sessions import create_session as CREATE_SESSION
-from models.find_sessions import find_session as FIND_SESSION
-from models.generate_tokens import generate_token as GENERATE_TOKEN
-from models.update_sessions import update_session as UPDATE_SESSION
-from models.verify_tokens import verify_token as VERIFY_TOKEN
-from models.find_users_projects import find_users_projects as FIND_USER_PROJECT
-from models.add_projects import add_projects as ADD_PROJECT
-from models.delete_projects import delete_projects as DELETE_PROJECT
+from models.create_users import create_user
+from models.verify_users import verify_user
+from models.create_sessions import create_session
+from models.find_sessions import find_session
+from models.generate_tokens import generate_token
+from models.update_sessions import update_session
+from models.verify_tokens import verify_token
+from models.find_users_projects import find_users_projects
+from models.add_projects import add_products
+from models.delete_projects import delete_projects

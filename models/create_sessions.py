@@ -11,7 +11,7 @@ from uuid import uuid4
 from datetime import datetime, timedelta
 from schemas import Sessions
 
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def create_session(unique_identifier, user_agent):
@@ -27,10 +27,10 @@ def create_session(unique_identifier, user_agent):
             "sameSite": "lax",
         }
 
-        LOG.debug(f"Secure session: {secure}")
-        LOG.debug(f"Session maxAge: {hour}")
+        logger.debug(f"Secure session: {secure}")
+        logger.debug(f"Session maxAge: {hour}")
 
-        LOG.debug(f"creating session for {unique_identifier} ...")
+        logger.debug(f"creating session for {unique_identifier} ...")
         session = Sessions.create(
             sid=uuid4(),
             unique_identifier=unique_identifier,
@@ -39,8 +39,10 @@ def create_session(unique_identifier, user_agent):
             data=str(data),
             createdAt=datetime.now(),
         )
-        LOG.info(f"SUCCESSFULLY CREATED SESSION {str(session)} FOR {unique_identifier}")
+        logger.info(
+            f"SUCCESSFULLY CREATED SESSION {str(session)} FOR {unique_identifier}"
+        )
         return {"sid": str(session), "uid": unique_identifier, "data": data}
     except (pw.DatabaseError) as err:
-        LOG.error(f"FAILED TO CREATE SESSION FOR {unique_identifier} CHECK LOGS")
+        logger.error(f"FAILED TO CREATE SESSION FOR {unique_identifier} CHECK LOGS")
         raise InternalServerError(err)

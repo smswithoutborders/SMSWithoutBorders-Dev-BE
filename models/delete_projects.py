@@ -1,6 +1,6 @@
 import logging
 
-from error import Conflict, Unauthorized, Forbidden, InternalServerError
+from error import Unauthorized, Forbidden, InternalServerError
 
 import peewee as pw
 from schemas import Users_projects, Products, Users
@@ -11,23 +11,23 @@ from config_init import configuration
 
 config = configuration()
 
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
-def delete_projects(uid, project_name):
+def delete_projects(uid, product_name):
     try:
-        LOG.debug(f"checking {uid}'s project status for {project_name}...")
+        logger.debug(f"checking {uid}'s status for {product_name}...")
 
         try:
-            pid = Products.get(Products.name == project_name)
+            pid = Products.get(Products.name == product_name)
         except Products.DoesNotExist:
-            LOG.error("INVALID PROJECT")
+            logger.error("INVALID PROJECT")
             raise Forbidden()
 
         try:
             user = Users.get(Users.id == uid)
         except Users.DoesNotExist:
-            LOG.error("USER DOESN'T EXIST")
+            logger.error("USER DOESN'T EXIST")
             raise Forbidden()
 
         try:
@@ -35,26 +35,26 @@ def delete_projects(uid, project_name):
                 Users_projects.user_id == uid, Users_projects.product_id == pid
             )
         except Users_projects.DoesNotExist:
-            LOG.error(f"User is not subscribed for {project_name}")
+            logger.error(f"User is not subscribed for {product_name}")
             return True
 
-        LOG.debug(f"requesting for {project_name}'s unsubscription for {uid} ...")
+        logger.debug(f"requesting for {product_name}'s unsubscription for {uid} ...")
 
-        AUTH_ID = user.auth_id
-        AUTH_KEY = user.auth_key
+        authId = user.auth_id
+        authKey = user.auth_key
 
         SETUP = config["SETUP_CREDS"]
-        SETUP_ID = SETUP["ID"]
-        SETUP_KEY = SETUP["key"]
+        setupId = SETUP["ID"]
+        setupKey = SETUP["key"]
 
         data = {
-            "auth_id": AUTH_ID,
-            "auth_key": AUTH_KEY,
-            "id": SETUP_ID,
-            "key": SETUP_KEY,
+            "auth_id": authId,
+            "auth_key": authKey,
+            "id": setupId,
+            "key": setupKey,
         }
 
-        if project_name == "openapi":
+        if product_name == "openapi":
             HOST = openapi.HOST
             PORT = openapi.PORT
             VERSION = openapi.VERSION
@@ -62,7 +62,7 @@ def delete_projects(uid, project_name):
 
             response = requests.delete(url=URL, json=data)
             if response.status_code == 401:
-                LOG.error("INVALID SETUP CREDENTIALS")
+                logger.error("INVALID SETUP CREDENTIALS")
                 raise Unauthorized()
             elif response.status_code == 200:
                 remove_project = project.delete().where(
@@ -70,15 +70,15 @@ def delete_projects(uid, project_name):
                 )
                 remove_project.execute()
 
-                LOG.info(f"SUCCESSFULLY UNSUBSCRIBED {uid} FOR {project_name}")
+                logger.info(f"SUCCESSFULLY UNSUBSCRIBED {uid} FOR {product_name}")
                 return True
             else:
-                LOG.error(
+                logger.error(
                     f"OPENAPI SERVER FAILED WITH STATUS CODE {response.status_code}"
                 )
                 raise InternalServerError(response.text)
         else:
-            LOG.error("INVALID PRODUCT")
+            logger.error("INVALID PRODUCT")
             raise Forbidden()
     except (pw.DatabaseError) as err:
         raise InternalServerError(err)

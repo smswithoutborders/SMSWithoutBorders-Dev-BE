@@ -6,7 +6,7 @@ import peewee as pw
 from schemas import Users_projects, Products, Users
 from schemas.baseModel import db
 
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def find_users_projects(uid):
@@ -14,7 +14,7 @@ def find_users_projects(uid):
         unsubscribed = []
         subscribed = []
 
-        LOG.debug(f"fetching unsubscribed projects for {uid}...")
+        logger.debug(f"fetching unsubscribed projects for {uid}...")
         unsub_cursor = db.execute_sql(
             f'SELECT t1.id, t1.name, t1.label, t1.description, t1.documentation FROM products t1 LEFT JOIN (SELECT * FROM users_projects WHERE users_projects.user_id = "{uid}") AS t2 ON t2.product_id = t1.id WHERE t2.product_id IS NULL'
         )
@@ -29,7 +29,7 @@ def find_users_projects(uid):
             }
             unsubscribed.append(unsub_project)
 
-        LOG.debug(f"fetching subscribed products for {uid}...")
+        logger.debug(f"fetching subscribed products for {uid}...")
         sub_cursor = (
             Products.select().join(Users_projects).join(Users).where(Users.id == uid)
         )
@@ -44,7 +44,7 @@ def find_users_projects(uid):
             }
             subscribed.append(sub_project)
 
-        LOG.info(f"SUCCESSFULLY GATHERED {uid} PRODUCTS")
+        logger.info(f"SUCCESSFULLY GATHERED {uid} PRODUCTS")
         return {"unsubscribed": unsubscribed, "subscribed": subscribed}
 
     except (pw.DatabaseError) as err:

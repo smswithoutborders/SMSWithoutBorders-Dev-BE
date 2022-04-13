@@ -6,20 +6,20 @@ from error import BadRequest, Conflict, Forbidden, InternalServerError, Unauthor
 from datetime import timedelta
 from schemas.baseModel import db
 
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 v1 = Blueprint("v1", __name__)
 
 from models import (
-    CREATE_USERS,
-    VERIFY_USERS,
-    CREATE_SESSION,
-    FIND_SESSION,
-    GENERATE_TOKEN,
-    UPDATE_SESSION,
-    VERIFY_TOKEN,
-    FIND_USER_PROJECT,
-    ADD_PROJECT,
-    DELETE_PROJECT,
+    create_user,
+    verify_user,
+    create_session,
+    find_session,
+    generate_token,
+    update_session,
+    verify_token,
+    find_users_projects,
+    add_products,
+    delete_projects,
 )
 
 
@@ -38,27 +38,27 @@ def after_request(response):
 def signup():
     try:
         if not "email" in request.json or not request.json["email"]:
-            LOG.error("no email")
+            logger.error("no email")
             raise BadRequest()
         elif not "password" in request.json or not request.json["password"]:
-            LOG.error("no password")
+            logger.error("no password")
             raise BadRequest()
 
         email = request.json["email"]
         password = request.json["password"]
 
-        ID = CREATE_USERS(email, password)
-        GENERATE_TOKEN(ID)
+        userId = create_user(email, password)
+        generate_token(userId)
         return "", 200
     except BadRequest as err:
         return str(err), 400
     except Conflict as err:
         return str(err), 409
     except (InternalServerError) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
     except (Exception) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
 
 
@@ -66,21 +66,21 @@ def signup():
 def login():
     try:
         if not "email" in request.json or not request.json["email"]:
-            LOG.error("no email")
+            logger.error("no email")
             raise BadRequest()
         elif not "password" in request.json or not request.json["password"]:
-            LOG.error("no password")
+            logger.error("no password")
             raise BadRequest()
         elif not request.headers.get("User-Agent"):
-            LOG.error("no user agent")
+            logger.error("no user agent")
             raise BadRequest()
 
         email = request.json["email"]
         password = request.json["password"]
         user_agent = request.headers.get("User-Agent")
 
-        user = VERIFY_USERS(email, password)
-        session = CREATE_SESSION(user["uid"], user_agent)
+        user = verify_user(email, password)
+        session = create_session(user["uid"], user_agent)
 
         res = jsonify(user)
         res.set_cookie(
@@ -100,10 +100,10 @@ def login():
     except Conflict as err:
         return str(err), 409
     except (InternalServerError) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
     except (Exception) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
 
 
@@ -111,27 +111,27 @@ def login():
 def get_tokens(user_id):
     try:
         if not user_id:
-            LOG.error("no user id")
+            logger.error("no user id")
             raise BadRequest()
         elif not request.cookies.get("SWOBDev"):
-            LOG.error("no cookie")
+            logger.error("no cookie")
             raise Unauthorized()
         elif not request.headers.get("User-Agent"):
-            LOG.error("no user agent")
+            logger.error("no user agent")
             raise BadRequest()
 
         str_cookie = request.cookies.get("SWOBDev")
         json_cookie = json.loads(str_cookie)
 
-        SID = json_cookie["sid"]
-        UID = user_id
-        COOKIE = json_cookie["cookie"]
+        sid = json_cookie["sid"]
+        uid = user_id
+        cookie = json_cookie["cookie"]
         user_agent = request.headers.get("User-Agent")
 
-        ID = FIND_SESSION(SID, UID, user_agent, COOKIE)
-        tokens = GENERATE_TOKEN(ID)
+        userId = find_session(sid, uid, user_agent, cookie)
+        tokens = generate_token(userId)
 
-        session = UPDATE_SESSION(SID, ID)
+        session = update_session(sid, userId)
 
         res = jsonify(tokens)
 
@@ -152,10 +152,10 @@ def get_tokens(user_id):
     except Conflict as err:
         return str(err), 409
     except (InternalServerError) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
     except (Exception) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
 
 
@@ -163,21 +163,21 @@ def get_tokens(user_id):
 def authenticate():
     try:
         if not request.headers.get("User-Agent"):
-            LOG.error("no user agent")
+            logger.error("no user agent")
             raise BadRequest()
         elif not "auth_id" in request.json or not request.json["auth_id"]:
-            LOG.error("no auth_id")
+            logger.error("no auth_id")
             raise BadRequest()
         elif not "auth_key" in request.json or not request.json["auth_key"]:
-            LOG.error("no auth_key")
+            logger.error("no auth_key")
             raise BadRequest()
 
         user_agent = request.headers.get("User-Agent")
-        AUTH_ID = request.json["auth_id"]
-        AUTH_KEY = request.json["auth_key"]
+        auth_id = request.json["auth_id"]
+        auth_key = request.json["auth_key"]
 
-        userId = VERIFY_TOKEN(AUTH_ID, AUTH_KEY)
-        session = CREATE_SESSION(userId, user_agent)
+        userId = verify_token(auth_id, auth_key)
+        session = create_session(userId, user_agent)
 
         res = jsonify()
 
@@ -207,38 +207,38 @@ def authenticate():
     except Conflict as err:
         return str(err), 409
     except (InternalServerError) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
     except (Exception) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
 
 
 @v1.route("/users/<user_id>/products", methods=["GET"])
-def get_projects(user_id):
+def get_products(user_id):
     try:
         if not user_id:
-            LOG.error("no user id")
+            logger.error("no user id")
             raise BadRequest()
         elif not request.cookies.get("SWOBDev"):
-            LOG.error("no cookie")
+            logger.error("no cookie")
             raise Unauthorized()
         elif not request.headers.get("User-Agent"):
-            LOG.error("no user agent")
+            logger.error("no user agent")
             raise BadRequest()
 
         str_cookie = request.cookies.get("SWOBDev")
         json_cookie = json.loads(str_cookie)
 
-        SID = json_cookie["sid"]
-        UID = user_id
-        COOKIE = json_cookie["cookie"]
+        sid = json_cookie["sid"]
+        uid = user_id
+        cookie = json_cookie["cookie"]
         user_agent = request.headers.get("User-Agent")
 
-        ID = FIND_SESSION(SID, UID, user_agent, COOKIE)
-        projects = FIND_USER_PROJECT(ID)
+        userId = find_session(sid, uid, user_agent, cookie)
+        projects = find_users_projects(userId)
 
-        session = UPDATE_SESSION(SID, ID)
+        session = update_session(sid, userId)
 
         res = jsonify(projects)
 
@@ -261,42 +261,42 @@ def get_projects(user_id):
     except Conflict as err:
         return str(err), 409
     except (InternalServerError) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
     except (Exception) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
 
 
 @v1.route("/users/<user_id>/products/<product_name>", methods=["POST"])
-def add_project(user_id, product_name):
+def addProducts(user_id, product_name):
     try:
         if not user_id:
-            LOG.error("no user id")
+            logger.error("no user id")
             raise BadRequest()
         elif not product_name:
-            LOG.error("no project name")
+            logger.error("no project name")
             raise BadRequest()
         elif not request.cookies.get("SWOBDev"):
-            LOG.error("no cookie")
+            logger.error("no cookie")
             raise Unauthorized()
         elif not request.headers.get("User-Agent"):
-            LOG.error("no user agent")
+            logger.error("no user agent")
             raise BadRequest()
 
         str_cookie = request.cookies.get("SWOBDev")
         json_cookie = json.loads(str_cookie)
 
-        SID = json_cookie["sid"]
-        UID = user_id
-        PROJECT_NAME = product_name
-        COOKIE = json_cookie["cookie"]
+        sid = json_cookie["sid"]
+        uid = user_id
+        projectName = product_name
+        cookie = json_cookie["cookie"]
         user_agent = request.headers.get("User-Agent")
 
-        ID = FIND_SESSION(SID, UID, user_agent, COOKIE)
-        ADD_PROJECT(ID, PROJECT_NAME)
+        userId = find_session(sid, uid, user_agent, cookie)
+        add_products(userId, projectName)
 
-        session = UPDATE_SESSION(SID, ID)
+        session = update_session(sid, userId)
 
         res = jsonify()
 
@@ -319,42 +319,42 @@ def add_project(user_id, product_name):
     except Conflict as err:
         return str(err), 409
     except (InternalServerError) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
     except (Exception) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
 
 
 @v1.route("/users/<user_id>/products/<product_name>", methods=["DELETE"])
-def delete_project(user_id, product_name):
+def deleteProducts(user_id, product_name):
     try:
         if not user_id:
-            LOG.error("no user id")
+            logger.error("no user id")
             raise BadRequest()
         elif not product_name:
-            LOG.error("no project name")
+            logger.error("no project name")
             raise BadRequest()
         elif not request.cookies.get("SWOBDev"):
-            LOG.error("no cookie")
+            logger.error("no cookie")
             raise Unauthorized()
         elif not request.headers.get("User-Agent"):
-            LOG.error("no user agent")
+            logger.error("no user agent")
             raise BadRequest()
 
         str_cookie = request.cookies.get("SWOBDev")
         json_cookie = json.loads(str_cookie)
 
-        SID = json_cookie["sid"]
-        UID = user_id
-        PROJECT_NAME = product_name
-        COOKIE = json_cookie["cookie"]
+        sid = json_cookie["sid"]
+        uid = user_id
+        projectName = product_name
+        cookie = json_cookie["cookie"]
         user_agent = request.headers.get("User-Agent")
 
-        ID = FIND_SESSION(SID, UID, user_agent, COOKIE)
-        DELETE_PROJECT(ID, PROJECT_NAME)
+        userId = find_session(sid, uid, user_agent, cookie)
+        delete_projects(userId, projectName)
 
-        session = UPDATE_SESSION(SID, ID)
+        session = update_session(sid, userId)
 
         res = jsonify()
 
@@ -377,8 +377,8 @@ def delete_project(user_id, product_name):
     except Conflict as err:
         return str(err), 409
     except (InternalServerError) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
     except (Exception) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
