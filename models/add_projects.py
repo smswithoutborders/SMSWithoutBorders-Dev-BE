@@ -11,23 +11,23 @@ from config_init import configuration
 
 config = configuration()
 
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
-def add_projects(uid, project_name):
+def add_products(uid, product_name):
     try:
-        LOG.debug(f"checking {uid}'s project status for {project_name}...")
+        logger.debug(f"checking {uid}'s status for {product_name}...")
 
         try:
-            pid = Products.get(Products.name == project_name)
+            pid = Products.get(Products.name == product_name)
         except Products.DoesNotExist:
-            LOG.error("INVALID PRODUCT")
+            logger.error("INVALID PRODUCT")
             raise Forbidden()
 
         try:
             user = Users.get(Users.id == uid)
         except Users.DoesNotExist:
-            LOG.error("USER DOESN'T EXIST")
+            logger.error("USER DOESN'T EXIST")
             raise Forbidden()
 
         try:
@@ -35,23 +35,23 @@ def add_projects(uid, project_name):
                 Users_projects.user_id == uid, Users_projects.product_id == pid
             )
         except Users_projects.DoesNotExist:
-            LOG.debug(f"requesting for {project_name}'s subscription for {uid} ...")
+            logger.debug(f"requesting for {product_name}'s subscription for {uid} ...")
 
-            AUTH_ID = user.auth_id
-            AUTH_KEY = user.auth_key
+            authId = user.auth_id
+            authKey = user.auth_key
 
             SETUP = config["SETUP_CREDS"]
-            SETUP_ID = SETUP["ID"]
-            SETUP_KEY = SETUP["key"]
+            setupId = SETUP["ID"]
+            setupKey = SETUP["key"]
 
             data = {
-                "auth_id": AUTH_ID,
-                "auth_key": AUTH_KEY,
-                "id": SETUP_ID,
-                "key": SETUP_KEY,
+                "auth_id": authId,
+                "auth_key": authKey,
+                "id": setupId,
+                "key": setupKey,
             }
 
-            if project_name == "openapi":
+            if product_name == "openapi":
                 HOST = openapi.HOST
                 PORT = openapi.PORT
                 VERSION = openapi.VERSION
@@ -59,28 +59,28 @@ def add_projects(uid, project_name):
 
                 response = requests.post(url=URL, json=data)
                 if response.status_code == 401:
-                    LOG.error("INVALID SETUP CREDENTIALS")
+                    logger.error("INVALID SETUP CREDENTIALS")
                     raise Unauthorized()
                 elif response.status_code == 200:
                     Users_projects.create(user_id=uid, product_id=pid)
-                    LOG.info(f"SUCCESSFULLY SUBSCRIBED {uid} FOR {project_name}")
+                    logger.info(f"SUCCESSFULLY SUBSCRIBED {uid} FOR {product_name}")
                     return True
                 elif response.status_code == 409:
-                    LOG.error(f"USER {uid} IS ALREADY SUBSCRIBED FOR {project_name}")
+                    logger.error(f"USER {uid} IS ALREADY SUBSCRIBED FOR {product_name}")
                     raise Conflict()
                 elif response.status_code == 400:
-                    LOG.error(f"INCOMPLETE DATA. CHECK YOUR REQUEST BODY")
+                    logger.error(f"INCOMPLETE DATA. CHECK YOUR REQUEST BODY")
                     raise BadRequest()
                 else:
-                    LOG.error(
+                    logger.error(
                         f"OPENAPI SERVER FAILED WITH STATUS CODE {response.status_code}"
                     )
                     raise InternalServerError(response.text)
             else:
-                LOG.error("INVALID PRODUCT")
+                logger.error("INVALID PRODUCT")
                 raise Forbidden()
 
-        LOG.error(f"{uid} ALREADY SUBSCRIBED FOR {project_name}")
+        logger.error(f"{uid} ALREADY SUBSCRIBED FOR {product_name}")
         raise Conflict()
 
     except pw.DatabaseError as err:
