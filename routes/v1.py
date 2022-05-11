@@ -1,4 +1,5 @@
 import logging
+import base64
 
 from flask import Blueprint, jsonify, request
 import json
@@ -181,16 +182,20 @@ def authenticate():
 
         res = jsonify()
 
+        cookie_base64 = json.dumps(
+            {
+                "userAgent": user_agent,
+                "uid": session["uid"],
+                "cookie": session["data"],
+                "verification_path": f"v1/sessions/{session['sid']}",
+            }
+        )
+
+        cookie_base64 = base64.b64encode(bytes(cookie_base64, "utf-8"))
+
         res.set_cookie(
             "SWOBDev",
-            json.dumps(
-                {
-                    "sid": session["sid"],
-                    "userAgent": user_agent,
-                    "uid": userId,
-                    "cookie": session["data"],
-                }
-            ),
+            cookie_base64,
             max_age=timedelta(milliseconds=session["data"]["maxAge"]),
             secure=session["data"]["secure"],
             httponly=session["data"]["httpOnly"],
@@ -368,6 +373,43 @@ def deleteProducts(user_id, product_name):
         )
 
         return res, 200
+    except BadRequest as err:
+        return str(err), 400
+    except Unauthorized as err:
+        return str(err), 401
+    except Forbidden as err:
+        return str(err), 403
+    except Conflict as err:
+        return str(err), 409
+    except (InternalServerError) as err:
+        logger.error(err)
+        return "internal server error", 500
+    except (Exception) as err:
+        logger.error(err)
+        return "internal server error", 500
+
+
+@v1.route("/sessions/<session_id>", methods=["POST"])
+def sessions_auth(session_id):
+    try:
+        if not "user_agent" in request.json or not request.json["user_agent"]:
+            logger.error("no user_agent")
+            raise BadRequest()
+        elif not "uid" in request.json or not request.json["uid"]:
+            logger.error("no uid")
+            raise BadRequest()
+        elif not "cookie" in request.json or not request.json["cookie"]:
+            logger.error("no cookie")
+            raise BadRequest()
+
+        user_agent = request.json["user_agent"]
+        sid = session_id
+        uid = request.json["uid"]
+        cookie = request.json["cookie"]
+
+        find_session(sid, uid, user_agent, cookie)
+
+        return "res", 200
     except BadRequest as err:
         return str(err), 400
     except Unauthorized as err:
