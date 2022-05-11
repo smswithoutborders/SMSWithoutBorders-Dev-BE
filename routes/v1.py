@@ -409,7 +409,7 @@ def sessions_auth(session_id):
 
         find_session(sid, uid, user_agent, cookie)
 
-        return "res", 200
+        return "", 200
     except BadRequest as err:
         return str(err), 400
     except Unauthorized as err:
