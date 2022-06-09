@@ -11,6 +11,8 @@ class Security:
     def __init__(self) -> None:
         pass
 
-    def hash(data):
+    def hash(data: str) -> str:
+        """
+        """
         hash_data = hmac.new(salt.encode("utf-8"), data.encode("utf-8"), hashlib.sha512)
         return str(hash_data.hexdigest())

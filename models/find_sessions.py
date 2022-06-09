@@ -1,16 +1,24 @@
 import logging
-from error import Conflict, InternalServerError, Unauthorized
-
-import peewee as pw
-from datetime import datetime
-from schemas import Sessions
-
 logger = logging.getLogger(__name__)
 
+from config_init import configuration
+config = configuration()
 
-def find_session(sid, unique_identifier, user_agent, cookie):
+from peewee import DatabaseError
+
+from datetime import datetime
+
+from schemas.sessions import Sessions
+
+from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Conflict
+from werkzeug.exceptions import InternalServerError
+
+def find_session(sid: str, unique_identifier: str, user_agent: str, cookie: dict) -> str:
+    """
+    """
     try:
-        logger.debug(f"finding session {sid} for user {unique_identifier} ...")
+        logger.debug("finding session %s for user %s ..." % (sid, unique_identifier))
         sessions = (
             Sessions.select()
             .where(
@@ -26,19 +34,19 @@ def find_session(sid, unique_identifier, user_agent, cookie):
 
         # check for duplicates
         if len(result) > 1:
-            logger.error(f"Multiple sessions {sid} found")
+            logger.error("Multiple sessions %s found" % sid)
             raise Conflict()
 
         # check for no user
         if len(result) < 1:
-            logger.error(f"No session {sid} found")
+            logger.error("No session %s found" % sid)
             raise Unauthorized()
 
         expires = result[0]["expires"]
         age = expires.timestamp() - datetime.now().timestamp()
 
         if age <= 0:
-            logger.error(f"Expired session {sid}")
+            logger.error("Expired session %s" % sid)
             raise Unauthorized()
 
         str_cookie = str(cookie)
@@ -46,13 +54,14 @@ def find_session(sid, unique_identifier, user_agent, cookie):
         str_cookie = str_cookie.replace(": 'True'", ": True")
 
         if result[0]["data"] != str_cookie:
-            logger.error(f"Invalid cookie data")
-            logger.error(f'Original cokkie: {result[0]["data"]}')
-            logger.error(f"Invalid cokkie: {str_cookie}")
+            logger.error("Invalid cookie data")
+            logger.error('Original cokkie: %s' % result[0]["data"])
+            logger.error("Invalid cokkie: %s" % str_cookie)
             raise Unauthorized()
 
-        logger.info(f"SESSION {sid} FOUND")
+        logger.info("- SESSION %s FOUND" % sid)
         return str(result[0]["unique_identifier"])
-    except (pw.DatabaseError) as err:
-        logger.error(f"FAILED FINDING SESSION {sid} CHECK LOGS")
-        raise InternalServerError(err)
+
+    except DatabaseError as err:
+        logger.error("FAILED FINDING SESSION %s CHECK LOGS" % sid)
+        raise InternalServerError(err) from None

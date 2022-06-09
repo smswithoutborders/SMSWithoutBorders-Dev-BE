@@ -1,42 +1,43 @@
 import logging
-import base64
-
-from flask import Blueprint, jsonify, request
-import json
-from error import BadRequest, Conflict, Forbidden, InternalServerError, Unauthorized
-from datetime import timedelta
-from schemas.baseModel import db
-
 logger = logging.getLogger(__name__)
+
+from flask import Blueprint
+from flask import jsonify
+from flask import request
 v1 = Blueprint("v1", __name__)
 
-from models import (
-    create_user,
-    verify_user,
-    create_session,
-    find_session,
-    generate_token,
-    update_session,
-    verify_token,
-    find_users_projects,
-    add_products,
-    delete_projects,
-)
+import json
+import base64
+from datetime import timedelta
 
+from schemas.baseModel import db
 
-# @v1.before_request
-# def before_request():
-#     db.connect()
+from models.create_users import create_user
+from models.verify_users import verify_user
+from models.create_sessions import create_session
+from models.find_sessions import find_session
+from models.generate_tokens import generate_token
+from models.update_sessions import update_session
+from models.verify_tokens import verify_token
+from models.find_users_projects import find_users_projects
+from models.add_projects import add_products
+from models.delete_projects import delete_projects
 
+from werkzeug.exceptions import InternalServerError
+from werkzeug.exceptions import Conflict
+from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import BadRequest
 
 @v1.after_request
 def after_request(response):
     db.close()
     return response
 
-
 @v1.route("/signup", methods=["POST"])
-def signup():
+def signup() -> None:
+    """
+    """
     try:
         if not "email" in request.json or not request.json["email"]:
             logger.error("no email")
@@ -50,21 +51,27 @@ def signup():
 
         userId = create_user(email, password)
         generate_token(userId)
+
         return "", 200
+
     except BadRequest as err:
         return str(err), 400
+
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError) as err:
-        logger.error(err)
-        return "internal server error", 500
-    except (Exception) as err:
-        logger.error(err)
+
+    except InternalServerError as err:
+        logger.exception(err)
         return "internal server error", 500
 
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500
 
 @v1.route("/login", methods=["POST"])
-def login():
+def login() -> dict:
+    """
+    """
     try:
         if not "email" in request.json or not request.json["email"]:
             logger.error("no email")
@@ -94,22 +101,28 @@ def login():
         )
 
         return res, 200
+
     except BadRequest as err:
         return str(err), 400
+
     except Unauthorized as err:
         return str(err), 401
+
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError) as err:
-        logger.error(err)
-        return "internal server error", 500
-    except (Exception) as err:
-        logger.error(err)
+
+    except InternalServerError as err:
+        logger.exception(err)
         return "internal server error", 500
 
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500
 
-@v1.route("/users/<user_id>/tokens", methods=["GET"])
-def get_tokens(user_id):
+@v1.route("/users/<string:user_id>/tokens", methods=["GET"])
+def get_tokens(user_id) -> dict:
+    """
+    """
     try:
         if not user_id:
             logger.error("no user id")
@@ -146,22 +159,28 @@ def get_tokens(user_id):
         )
 
         return res, 200
+
     except BadRequest as err:
         return str(err), 400
+
     except Unauthorized as err:
         return str(err), 401
+
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError) as err:
-        logger.error(err)
-        return "internal server error", 500
-    except (Exception) as err:
-        logger.error(err)
+
+    except InternalServerError as err:
+        logger.exception(err)
         return "internal server error", 500
 
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500
 
 @v1.route("/authenticate", methods=["POST"])
-def authenticate():
+def authenticate() -> None:
+    """
+    """
     try:
         if not request.headers.get("User-Agent"):
             logger.error("no user agent")
@@ -203,24 +222,31 @@ def authenticate():
         )
 
         return res, 200
+
     except BadRequest as err:
         return str(err), 400
+
     except Unauthorized as err:
         return str(err), 401
+
     except Forbidden as err:
         return str(err), 403
+
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError) as err:
-        logger.error(err)
-        return "internal server error", 500
-    except (Exception) as err:
-        logger.error(err)
+
+    except InternalServerError as err:
+        logger.exception(err)
         return "internal server error", 500
 
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500
 
-@v1.route("/users/<user_id>/products", methods=["GET"])
-def get_products(user_id):
+@v1.route("/users/<string:user_id>/products", methods=["GET"])
+def get_products(user_id) -> dict:
+    """
+    """
     try:
         if not user_id:
             logger.error("no user id")
@@ -257,24 +283,31 @@ def get_products(user_id):
         )
 
         return res, 200
+
     except BadRequest as err:
         return str(err), 400
+
     except Unauthorized as err:
         return str(err), 401
+
     except Forbidden as err:
         return str(err), 403
+
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError) as err:
-        logger.error(err)
-        return "internal server error", 500
-    except (Exception) as err:
-        logger.error(err)
+
+    except InternalServerError as err:
+        logger.exception(err)
         return "internal server error", 500
 
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500
 
-@v1.route("/users/<user_id>/products/<product_name>", methods=["POST"])
-def addProducts(user_id, product_name):
+@v1.route("/users/<string:user_id>/products/<string:product_name>", methods=["POST"])
+def addProducts(user_id, product_name) -> None:
+    """
+    """
     try:
         if not user_id:
             logger.error("no user id")
@@ -315,24 +348,31 @@ def addProducts(user_id, product_name):
         )
 
         return res, 200
+
     except BadRequest as err:
         return str(err), 400
+
     except Unauthorized as err:
         return str(err), 401
+
     except Forbidden as err:
         return str(err), 403
+
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError) as err:
-        logger.error(err)
-        return "internal server error", 500
-    except (Exception) as err:
-        logger.error(err)
+
+    except InternalServerError as err:
+        logger.exception(err)
         return "internal server error", 500
 
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500
 
-@v1.route("/users/<user_id>/products/<product_name>", methods=["DELETE"])
-def deleteProducts(user_id, product_name):
+@v1.route("/users/<string:user_id>/products/<string:product_name>", methods=["DELETE"])
+def deleteProducts(user_id, product_name) -> None:
+    """
+    """
     try:
         if not user_id:
             logger.error("no user id")
@@ -373,24 +413,31 @@ def deleteProducts(user_id, product_name):
         )
 
         return res, 200
+
     except BadRequest as err:
         return str(err), 400
+
     except Unauthorized as err:
         return str(err), 401
+
     except Forbidden as err:
         return str(err), 403
+
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError) as err:
-        logger.error(err)
-        return "internal server error", 500
-    except (Exception) as err:
-        logger.error(err)
+
+    except InternalServerError as err:
+        logger.exception(err)
         return "internal server error", 500
 
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500
 
-@v1.route("/sessions/<session_id>", methods=["POST"])
-def sessions_auth(session_id):
+@v1.route("/sessions/<string:session_id>", methods=["POST"])
+def sessions_auth(session_id) -> None:
+    """
+    """
     try:
         if not "user_agent" in request.json or not request.json["user_agent"]:
             logger.error("no user_agent")
@@ -410,17 +457,23 @@ def sessions_auth(session_id):
         find_session(sid, uid, user_agent, cookie)
 
         return "", 200
+
     except BadRequest as err:
         return str(err), 400
+
     except Unauthorized as err:
         return str(err), 401
+
     except Forbidden as err:
         return str(err), 403
+
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError) as err:
-        logger.error(err)
+
+    except InternalServerError as err:
+        logger.exception(err)
         return "internal server error", 500
-    except (Exception) as err:
-        logger.error(err)
+
+    except Exception as err:
+        logger.exception(err)
         return "internal server error", 500

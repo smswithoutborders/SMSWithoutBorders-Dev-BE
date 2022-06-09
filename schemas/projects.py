@@ -1,11 +1,13 @@
-import peewee as pw
+from peewee import CharField
+from peewee import DateTimeField
+
 from schemas.baseModel import BaseModel
+
 from datetime import datetime
 
-
 class Products(BaseModel):
-    name = pw.CharField(null=True)
-    description = pw.CharField(null=True)
-    label = pw.CharField(null=True)
-    documentation = pw.CharField(null=True)
-    createdAt = pw.DateTimeField(null=True, default=datetime.now())
+    name = CharField(null=True)
+    description = CharField(null=True)
+    label = CharField(null=True)
+    documentation = CharField(null=True)
+    createdAt = DateTimeField(null=True, default=datetime.now)

@@ -1,11 +1,13 @@
-import peewee as pw
+from peewee import ForeignKeyField
+from peewee import DateTimeField
+
 from schemas.baseModel import BaseModel
 from schemas.users import Users
 from schemas.projects import Products
+
 from datetime import datetime
 
-
 class Users_projects(BaseModel):
-    user = pw.ForeignKeyField(Users)
-    product = pw.ForeignKeyField(Products)
-    createdAt = pw.DateTimeField(null=True, default=datetime.now())
+    user = ForeignKeyField(Users)
+    product = ForeignKeyField(Products)
+    createdAt = DateTimeField(null=True, default=datetime.now)

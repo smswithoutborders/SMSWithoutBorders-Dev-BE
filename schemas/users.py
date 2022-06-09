@@ -1,10 +1,14 @@
-import peewee as pw
+from peewee import CharField
+from peewee import DateTimeField
+
 from schemas.baseModel import BaseModel
 
+from datetime import datetime
+
 class Users(BaseModel):
-    id = pw.CharField(primary_key=True)
-    email = pw.CharField(unique=True, null=True)
-    password = pw.CharField(null=True)
-    auth_key = pw.CharField(unique=True, null=True)
-    auth_id = pw.CharField(unique=True, null=True)
-    createdAt = pw.DateTimeField(null=True)
+    id = CharField(primary_key=True)
+    email = CharField(unique=True, null=True)
+    password = CharField(null=True)
+    auth_key = CharField(unique=True, null=True)
+    auth_id = CharField(unique=True, null=True)
+    createdAt = DateTimeField(null=True, default=datetime.now)

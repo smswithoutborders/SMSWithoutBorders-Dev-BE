@@ -1,10 +1,12 @@
-import logging
 import ssl
+import argparse
 
-from flask import Flask
-from flask_cors import CORS
-
-app = Flask(__name__)
+# logger
+parser = argparse.ArgumentParser()
+parser.add_argument("--logs", help="Set log level")
+args = parser.parse_args()
+from logger import baseLogger
+baseLogger(args.logs or "info")
 
 from config_init import configuration
 
@@ -12,22 +14,29 @@ config = configuration()
 api = config["API"]
 SSL = config["SSL_API"]
 
+from flask import Flask
+from flask_cors import CORS
+from flask_swagger_ui import get_swaggerui_blueprint
+
+from models.isSSL import isSSL
+
+from routes.v1 import v1
+
+from controllers.sync_database import create_database
+from controllers.sync_database import create_tables
+from controllers.sync_database import sync_products
+
+app = Flask(__name__)
+
 CORS(
     app,
     origins=api["ORIGINS"],
     supports_credentials=True,
 )
 
-from routes.v1 import v1
-from schemas import create_tables
-from flask_swagger_ui import get_swaggerui_blueprint
-from logger import logger
-from models.isSSL import isSSL
-
-logger()
-server_logger = logging.getLogger(__name__)
-
+create_database()
 create_tables()
+sync_products()
 
 swaggerui_blueprint = get_swaggerui_blueprint(
     "/v1/api-docs", "/static/v1-api-docs.json"
@@ -44,8 +53,8 @@ if __name__ == "__main__":
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         context.load_cert_chain(SSL["CERTIFICATE"], SSL["KEY"])
 
-        server_logger.info(f"Running on secure port: {SSL['PORT']}")
+        app.logger.info("Running on secure port: %s" % SSL['PORT'])
         app.run(host=api["HOST"], port=SSL["PORT"], ssl_context=context)
     else:
-        server_logger.info(f"Running on un-secure port: {api['PORT']}")
+        app.logger.info("Running on un-secure port: %s" % api['PORT'])
         app.run(host=api["HOST"], port=api["PORT"])
