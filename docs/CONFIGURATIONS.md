@@ -91,6 +91,12 @@ New products are fetched from the product **[info.json](../products/info.json)**
 python3 server.py
 ```
 
+### logger
+
+```bash
+python3 server.py --logs=debug
+```
+
 ## API SandBox
 
 ```
