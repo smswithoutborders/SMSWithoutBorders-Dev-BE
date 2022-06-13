@@ -1,22 +1,28 @@
 import logging
-
-from error import BadRequest, Conflict, Forbidden, InternalServerError, Unauthorized
-
-import peewee as pw
-import requests
-from schemas import Users_projects, Products, Users
-from products import openapi
-
-from config_init import configuration
-
-config = configuration()
-
 logger = logging.getLogger(__name__)
 
+from config_init import configuration
+config = configuration()
 
-def add_products(uid, product_name):
+import requests
+
+from peewee import DatabaseError
+
+from schemas.users_projects import Users_projects
+from schemas.projects import Products
+from schemas.users import Users
+
+from werkzeug.exceptions import InternalServerError
+from werkzeug.exceptions import Conflict
+from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import BadRequest
+
+def add_products(uid: str, product_name: str) -> bool:
+    """
+    """
     try:
-        logger.debug(f"checking {uid}'s status for {product_name}...")
+        logger.debug("checking %s's status for %s..." % (uid, product_name))
 
         try:
             pid = Products.get(Products.name == product_name)
@@ -35,7 +41,7 @@ def add_products(uid, product_name):
                 Users_projects.user_id == uid, Users_projects.product_id == pid
             )
         except Users_projects.DoesNotExist:
-            logger.debug(f"requesting for {product_name}'s subscription for {uid} ...")
+            logger.debug("requesting for %s's subscription for %s ..." % (product_name, uid))
 
             authId = user.auth_id
             authKey = user.auth_key
@@ -51,11 +57,12 @@ def add_products(uid, product_name):
                 "key": setupKey,
             }
 
-            if product_name == "openapi":
-                HOST = openapi.HOST
-                PORT = openapi.PORT
-                VERSION = openapi.VERSION
-                URL = f"{HOST}:{PORT}/{VERSION}/subscribe"
+            try:
+                PRODUCTS = config["PRODUCT"]
+                HOST = PRODUCTS["%s" % product_name]["host"] 
+                PORT = PRODUCTS["%s" % product_name]["port"] 
+                VERSION = PRODUCTS["%s" % product_name]["version"]
+                URL = "%s:%s/%s/subscribe" % (HOST, PORT, VERSION)
 
                 response = requests.post(url=URL, json=data)
                 if response.status_code == 401:
@@ -63,25 +70,27 @@ def add_products(uid, product_name):
                     raise Unauthorized()
                 elif response.status_code == 200:
                     Users_projects.create(user_id=uid, product_id=pid)
-                    logger.info(f"SUCCESSFULLY SUBSCRIBED {uid} FOR {product_name}")
+                    logger.info("- SUCCESSFULLY SUBSCRIBED %s FOR %s" % (uid, product_name))
                     return True
                 elif response.status_code == 409:
-                    logger.error(f"USER {uid} IS ALREADY SUBSCRIBED FOR {product_name}")
+                    logger.error("USER %s IS ALREADY SUBSCRIBED FOR %s" % (uid, product_name))
                     raise Conflict()
                 elif response.status_code == 400:
-                    logger.error(f"INCOMPLETE DATA. CHECK YOUR REQUEST BODY")
+                    logger.error("INCOMPLETE DATA. CHECK YOUR REQUEST BODY")
                     raise BadRequest()
                 else:
-                    logger.error(
-                        f"OPENAPI SERVER FAILED WITH STATUS CODE {response.status_code}"
-                    )
-                    raise InternalServerError(response.text)
-            else:
-                logger.error("INVALID PRODUCT")
-                raise Forbidden()
+                    logger.error("OPENAPI SERVER FAILED WITH STATUS CODE %s" % response.status_code)
+                    raise InternalServerError(response)
 
-        logger.error(f"{uid} ALREADY SUBSCRIBED FOR {product_name}")
+            except KeyError as error:
+                logger.error("%s not found in products.ini file" % product_name)
+                raise InternalServerError(error) from None 
+                
+            except Exception as error:
+                raise InternalServerError(error) from None
+
+        logger.error("%s ALREADY SUBSCRIBED FOR %s", (uid, product_name))
         raise Conflict()
 
-    except pw.DatabaseError as err:
-        raise InternalServerError(err)
+    except DatabaseError as err:
+        raise InternalServerError(err) from None

@@ -1,22 +1,26 @@
 import logging
-
-from error import Unauthorized, Forbidden, InternalServerError
-
-import peewee as pw
-from schemas import Users_projects, Products, Users
-from products import openapi
-import requests
-
-from config_init import configuration
-
-config = configuration()
-
 logger = logging.getLogger(__name__)
 
+from config_init import configuration
+config = configuration()
 
-def delete_projects(uid, product_name):
+from peewee import DatabaseError
+
+from schemas.users_projects import Users_projects
+from schemas.projects import Products
+from schemas.users import Users
+
+import requests
+
+from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import InternalServerError
+
+def delete_projects(uid: str, product_name: str) -> bool:
+    """
+    """
     try:
-        logger.debug(f"checking {uid}'s status for {product_name}...")
+        logger.debug("checking %s's status for %s..." % (uid, product_name))
 
         try:
             pid = Products.get(Products.name == product_name)
@@ -35,10 +39,10 @@ def delete_projects(uid, product_name):
                 Users_projects.user_id == uid, Users_projects.product_id == pid
             )
         except Users_projects.DoesNotExist:
-            logger.error(f"User is not subscribed for {product_name}")
+            logger.error("User is not subscribed for %s" % product_name)
             return True
 
-        logger.debug(f"requesting for {product_name}'s unsubscription for {uid} ...")
+        logger.debug("requesting for %s's unsubscription for %s ..." % (product_name, uid))
 
         authId = user.auth_id
         authKey = user.auth_key
@@ -54,31 +58,33 @@ def delete_projects(uid, product_name):
             "key": setupKey,
         }
 
-        if product_name == "openapi":
-            HOST = openapi.HOST
-            PORT = openapi.PORT
-            VERSION = openapi.VERSION
-            URL = f"{HOST}:{PORT}/{VERSION}/unsubscribe"
+        try:
+            PRODUCTS = config["PRODUCT"]
+            HOST = PRODUCTS["%s" % product_name]["host"] 
+            PORT = PRODUCTS["%s" % product_name]["port"] 
+            VERSION = PRODUCTS["%s" % product_name]["version"]
+            URL = "%s:%s/%s/unsubscribe" % (HOST, PORT, VERSION)
 
             response = requests.delete(url=URL, json=data)
             if response.status_code == 401:
                 logger.error("INVALID SETUP CREDENTIALS")
                 raise Unauthorized()
             elif response.status_code == 200:
-                remove_project = project.delete().where(
-                    Users_projects.user_id == uid, Users_projects.product_id == pid
-                )
+                remove_project = project.delete().where(Users_projects.user_id == uid, Users_projects.product_id == pid)
                 remove_project.execute()
 
-                logger.info(f"SUCCESSFULLY UNSUBSCRIBED {uid} FOR {product_name}")
+                logger.info("- SUCCESSFULLY UNSUBSCRIBED %s FOR %s" % (uid, product_name))
                 return True
             else:
-                logger.error(
-                    f"OPENAPI SERVER FAILED WITH STATUS CODE {response.status_code}"
-                )
-                raise InternalServerError(response.text)
-        else:
-            logger.error("INVALID PRODUCT")
-            raise Forbidden()
-    except (pw.DatabaseError) as err:
-        raise InternalServerError(err)
+                logger.error("OPENAPI SERVER FAILED WITH STATUS CODE %s" % response.status_code)
+                raise InternalServerError(response)
+
+        except KeyError as error:
+                logger.error("%s not found in products.ini file" % product_name)
+                raise InternalServerError(error) from None 
+                
+        except Exception as error:
+            raise InternalServerError(error) from None
+
+    except DatabaseError as err:
+        raise InternalServerError(err) from None

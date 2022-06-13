@@ -46,7 +46,7 @@ All configuration files are found in the **[.config](../.config)** directory.
 
 ### Development configurations
 
-**[default.ini](../.config/example.default.ini)** is the configuration file for a development.
+**[default.ini](../.config/example.default.ini)** is the default configuration file.
 
 To set up Database and API, copy the template files "example.default.ini" and rename to "default.ini"
 
@@ -56,29 +56,27 @@ cp .config/example.default.ini .config/default.ini
 
 ### Access configurations
 
-**[setup.ini](../example.setup.ini)** is the access file.
+**[setup.ini](../.config/example.setup.ini)** is the access configuration file.
 
 To set up access, copy the template files "example.setup.ini" and rename to "setup.ini"
 
 ```
-cp example.setup.ini setup.ini
+cp .config/example.setup.ini .config/setup.ini
 ```
 
 ### Products configurations
 
-Products are classes found in **[products.py](../products.py)**.
+**[products.ini](../.config/example.products.ini)** is the products configuration file.
 
-To set up products set:
+To set up products, copy the template files "example.products.ini" and rename to "products.ini"
 
-HOST: The url pointing to the product (without port number)
-
-PORT: The port number the product connects to.
-
-VERSION: The version number of the product you’re trying to connect to. Prefix the version number with a “v”. Example v1, v2, e.t.c
+```
+cp .config/example.products.ini .config/products.ini
+```
 
 ### Add Products to database
 
-New products are fetched from **[products_info.ini](../products_info.ini)** and added to the database the first time the server starts. Each product's name is a section in the **[products_info.ini](../products_info.ini)** file and it's metadata contains:
+New products are fetched from the product **[info.json](../products/info.json)** file and added to the database the first time the server starts. Each product is an object in the **[info.json](../products/info.json)** file and it's metadata contains:
 
 - name = The name of the Product
 - label = The Display name for the Product
@@ -91,6 +89,12 @@ New products are fetched from **[products_info.ini](../products_info.ini)** and 
 
 ```bash
 python3 server.py
+```
+
+### logger
+
+```bash
+python3 server.py --logs=debug
 ```
 
 ## API SandBox

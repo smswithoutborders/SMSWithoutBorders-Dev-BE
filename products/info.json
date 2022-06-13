@@ -1,0 +1,6 @@
+[{
+    "name": "openapi",
+    "label": "OpenAPI",
+    "description": "Send bulk and single sms messages at scale",
+    "documentation": "https://smswithoutborders-openapi.readthedocs.io/en/latest/"
+}]
