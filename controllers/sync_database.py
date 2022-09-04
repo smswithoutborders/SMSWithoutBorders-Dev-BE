@@ -1,5 +1,4 @@
 import logging
-
 logger = logging.getLogger(__name__)
 
 from config_init import configuration
@@ -21,7 +20,6 @@ from schemas.projects import Products
 from schemas.users_projects import Users_projects
 
 from werkzeug.exceptions import InternalServerError
-
 
 def create_database() -> None:
     """
@@ -54,7 +52,6 @@ def create_database() -> None:
     except Exception as error:
         raise InternalServerError(error)
 
-
 def create_tables() -> None:
     """
     Create all database tables.
@@ -75,7 +72,6 @@ def create_tables() -> None:
     except Exception as error:
         raise InternalServerError(error)
 
-
 def sync_products() -> None:
     """ 
     """
@@ -86,19 +82,33 @@ def sync_products() -> None:
             error = "Products information file not found at %s" % product_info_filepath
             raise InternalServerError(error)
 
-        with open(product_info_filepath) as data_file:
+        with open(product_info_filepath, encoding="utf-8") as data_file:
             data = json.load(data_file)
-            for product in data:
-                try:
-                    Products.get(Products.name == product["name"])
-                except Products.DoesNotExist:
-                    logger.debug("Adding product %s ..." % product['name'])
-                    Products.create(
-                        name=product["name"],
-                        label=product["label"],
-                        description=product["description"],
-                        documentation=product["documentation"],
-                    )
+
+        for product in data:
+            try:
+                Products.get(Products.name == product["name"])
+            except Products.DoesNotExist:
+                logger.debug("Adding product %s ..." % product['name'])
+                Products.create(
+                    name=product["name"],
+                    label=product["label"],
+                    description=product["description"],
+                    documentation=product["documentation"],
+                )
+            else:
+                logger.debug("Updating product %s ..." % product['name'])
+                
+                update_product = Products.update(
+                    name=product["name"],
+                    label=product["label"],
+                    description=product["description"],
+                    documentation=product["documentation"],
+                ).where(
+                    Products.name == product["name"]
+                )
+
+                update_product.execute()
                     
     except Exception as error:
         raise InternalServerError(error)

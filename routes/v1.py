@@ -6,22 +6,19 @@ from flask import jsonify
 from flask import request
 v1 = Blueprint("v1", __name__)
 
+cookie_name = "SWOBDev"
+
 import json
 import base64
 from datetime import timedelta
 
 from schemas.baseModel import db
 
-from models.create_users import create_user
-from models.verify_users import verify_user
-from models.create_sessions import create_session
-from models.find_sessions import find_session
-from models.generate_tokens import generate_token
-from models.update_sessions import update_session
-from models.verify_tokens import verify_token
-from models.find_users_projects import find_users_projects
-from models.add_projects import add_products
-from models.delete_projects import delete_projects
+from models.users import User_Model
+from models.products import Product_Model
+from models.sessions import Session_Model
+
+from security.cookie import Cookie
 
 from werkzeug.exceptions import InternalServerError
 from werkzeug.exceptions import Conflict
@@ -46,11 +43,13 @@ def signup() -> None:
             logger.error("no password")
             raise BadRequest()
 
+        Users = User_Model()
+
         email = request.json["email"]
         password = request.json["password"]
 
-        userId = create_user(email, password)
-        generate_token(userId)
+        userId = Users.create(email=email, password=password)
+        Users.generate_token(uid=userId)
 
         return "", 200
 
@@ -83,21 +82,39 @@ def login() -> dict:
             logger.error("no user agent")
             raise BadRequest()
 
+        Users = User_Model()
+        Sessions = Session_Model()
+        cookie = Cookie()
+
         email = request.json["email"]
         password = request.json["password"]
         user_agent = request.headers.get("User-Agent")
 
-        user = verify_user(email, password)
-        session = create_session(user["uid"], user_agent)
+        user = Users.verify(email=email, password=password)
+
+        session = Sessions.create(
+            unique_identifier=user["uid"],
+            user_agent=user_agent
+        )
+
+        cookie_data = json.dumps({
+            "sid": session["sid"],
+            "cookie": session["data"]
+        })
+
+        e_cookie = cookie.encrypt(cookie_data)
+
+        session_data = json.loads(session["data"])
 
         res = jsonify(user)
+
         res.set_cookie(
-            "SWOBDev",
-            json.dumps({"sid": session["sid"], "cookie": session["data"]}),
-            max_age=timedelta(milliseconds=session["data"]["maxAge"]),
-            secure=session["data"]["secure"],
-            httponly=session["data"]["httpOnly"],
-            samesite=session["data"]["sameSite"],
+            cookie_name,
+            e_cookie,
+            max_age=timedelta(milliseconds=session_data["maxAge"]),
+            secure=session_data["secure"],
+            httponly=session_data["httpOnly"],
+            samesite=session_data["sameSite"]
         )
 
         return res, 200
@@ -134,28 +151,51 @@ def get_tokens(user_id) -> dict:
             logger.error("no user agent")
             raise BadRequest()
 
-        str_cookie = request.cookies.get("SWOBDev")
-        json_cookie = json.loads(str_cookie)
+        Users = User_Model()
+        Sessions = Session_Model()
+        cookie = Cookie()
 
+        e_cookie = request.cookies.get(cookie_name)
+        d_cookie = cookie.decrypt(e_cookie)
+        json_cookie = json.loads(d_cookie)
+        
         sid = json_cookie["sid"]
         uid = user_id
-        cookie = json_cookie["cookie"]
+        user_cookie = json_cookie["cookie"]
         user_agent = request.headers.get("User-Agent")
 
-        userId = find_session(sid, uid, user_agent, cookie)
-        tokens = generate_token(userId)
+        userId = Sessions.find(
+            sid=sid,
+            unique_identifier=uid,
+            user_agent=user_agent,
+            cookie=user_cookie
+        )
 
-        session = update_session(sid, userId)
+        tokens = Users.generate_token(uid=userId)
+
+        session = Sessions.update(
+            sid=sid,
+            unique_identifier=userId
+        )
 
         res = jsonify(tokens)
 
+        cookie_data = json.dumps({
+            "sid": session["sid"],
+            "cookie": session["data"]
+        })
+
+        e_cookie = cookie.encrypt(cookie_data)
+
+        session_data = json.loads(session["data"])
+
         res.set_cookie(
-            "SWOBDev",
-            json.dumps({"sid": session["sid"], "cookie": session["data"]}),
-            max_age=timedelta(milliseconds=session["data"]["maxAge"]),
-            secure=session["data"]["secure"],
-            httponly=session["data"]["httpOnly"],
-            samesite=session["data"]["sameSite"],
+            cookie_name,
+            e_cookie,
+            max_age=timedelta(milliseconds=session_data["maxAge"]),
+            secure=session_data["secure"],
+            httponly=session_data["httpOnly"],
+            samesite=session_data["sameSite"]
         )
 
         return res, 200
@@ -192,33 +232,45 @@ def authenticate() -> None:
             logger.error("no auth_key")
             raise BadRequest()
 
+        Users = User_Model()
+        Sessions = Session_Model()
+
         user_agent = request.headers.get("User-Agent")
         auth_id = request.json["auth_id"]
         auth_key = request.json["auth_key"]
 
-        userId = verify_token(auth_id, auth_key)
-        session = create_session(userId, user_agent)
+        userId = Users.verify_token(
+            auth_id=auth_id,
+            auth_key=auth_key
+        )
+        
+        session = Sessions.create(
+            unique_identifier=userId,
+            user_agent=user_agent
+        )
 
         res = jsonify()
+
+        session_data = json.loads(session["data"])
 
         cookie_base64 = json.dumps(
             {
                 "userAgent": user_agent,
                 "uid": session["uid"],
                 "cookie": session["data"],
-                "verification_path": f"v1/sessions/{session['sid']}",
+                "verification_path": f"v1/sessions/{session['sid']}"
             }
         )
 
         cookie_base64 = base64.b64encode(bytes(cookie_base64, "utf-8"))
 
         res.set_cookie(
-            "SWOBDev",
+            cookie_name,
             cookie_base64,
-            max_age=timedelta(milliseconds=session["data"]["maxAge"]),
-            secure=session["data"]["secure"],
-            httponly=session["data"]["httpOnly"],
-            samesite=session["data"]["sameSite"],
+            max_age=timedelta(milliseconds=session_data["maxAge"]),
+            secure=session_data["secure"],
+            httponly=session_data["httpOnly"],
+            samesite=session_data["sameSite"]
         )
 
         return res, 200
@@ -258,28 +310,51 @@ def get_products(user_id) -> dict:
             logger.error("no user agent")
             raise BadRequest()
 
-        str_cookie = request.cookies.get("SWOBDev")
-        json_cookie = json.loads(str_cookie)
+        Users = User_Model()
+        Sessions = Session_Model()
+        cookie = Cookie()
+
+        e_cookie = request.cookies.get(cookie_name)
+        d_cookie = cookie.decrypt(e_cookie)
+        json_cookie = json.loads(d_cookie)
 
         sid = json_cookie["sid"]
         uid = user_id
-        cookie = json_cookie["cookie"]
+        user_cookie = json_cookie["cookie"]
         user_agent = request.headers.get("User-Agent")
 
-        userId = find_session(sid, uid, user_agent, cookie)
-        projects = find_users_projects(userId)
+        userId = Sessions.find(
+            sid=sid,
+            unique_identifier=uid,
+            user_agent=user_agent,
+            cookie=user_cookie
+        )
 
-        session = update_session(sid, userId)
+        projects = Users.find_projects(uid=userId)
+
+        session = Sessions.update(
+            sid=sid,
+            unique_identifier=userId
+        )
 
         res = jsonify(projects)
 
+        cookie_data = json.dumps({
+            "sid": session["sid"],
+            "cookie": session["data"]
+        })
+
+        e_cookie = cookie.encrypt(cookie_data)
+
+        session_data = json.loads(session["data"])
+
         res.set_cookie(
-            "SWOBDev",
-            json.dumps({"sid": session["sid"], "cookie": session["data"]}),
-            max_age=timedelta(milliseconds=session["data"]["maxAge"]),
-            secure=session["data"]["secure"],
-            httponly=session["data"]["httpOnly"],
-            samesite=session["data"]["sameSite"],
+            cookie_name,
+            e_cookie,
+            max_age=timedelta(milliseconds=session_data["maxAge"]),
+            secure=session_data["secure"],
+            httponly=session_data["httpOnly"],
+            samesite=session_data["sameSite"]
         )
 
         return res, 200
@@ -322,29 +397,55 @@ def addProducts(user_id, product_name) -> None:
             logger.error("no user agent")
             raise BadRequest()
 
-        str_cookie = request.cookies.get("SWOBDev")
-        json_cookie = json.loads(str_cookie)
+        Sessions = Session_Model()
+        Products = Product_Model()
+        cookie = Cookie()
+
+        e_cookie = request.cookies.get(cookie_name)
+        d_cookie = cookie.decrypt(e_cookie)
+        json_cookie = json.loads(d_cookie)
 
         sid = json_cookie["sid"]
         uid = user_id
         projectName = product_name
-        cookie = json_cookie["cookie"]
+        user_cookie = json_cookie["cookie"]
         user_agent = request.headers.get("User-Agent")
 
-        userId = find_session(sid, uid, user_agent, cookie)
-        add_products(userId, projectName)
+        userId = Sessions.find(
+            sid=sid,
+            unique_identifier=uid,
+            user_agent=user_agent,
+            cookie=user_cookie
+        )
+        
+        Products.add(
+            uid=userId, 
+            product_name=projectName
+        )
 
-        session = update_session(sid, userId)
+        session = Sessions.update(
+            sid=sid,
+            unique_identifier=userId
+        )
 
         res = jsonify()
 
+        cookie_data = json.dumps({
+            "sid": session["sid"],
+            "cookie": session["data"]
+        })
+
+        e_cookie = cookie.encrypt(cookie_data)
+
+        session_data = json.loads(session["data"])
+
         res.set_cookie(
-            "SWOBDev",
-            json.dumps({"sid": session["sid"], "cookie": session["data"]}),
-            max_age=timedelta(milliseconds=session["data"]["maxAge"]),
-            secure=session["data"]["secure"],
-            httponly=session["data"]["httpOnly"],
-            samesite=session["data"]["sameSite"],
+            cookie_name,
+            e_cookie,
+            max_age=timedelta(milliseconds=session_data["maxAge"]),
+            secure=session_data["secure"],
+            httponly=session_data["httpOnly"],
+            samesite=session_data["sameSite"]
         )
 
         return res, 200
@@ -387,29 +488,52 @@ def deleteProducts(user_id, product_name) -> None:
             logger.error("no user agent")
             raise BadRequest()
 
-        str_cookie = request.cookies.get("SWOBDev")
-        json_cookie = json.loads(str_cookie)
+        Sessions = Session_Model()
+        Products = Product_Model()
+        cookie = Cookie()
+
+        e_cookie = request.cookies.get(cookie_name)
+        d_cookie = cookie.decrypt(e_cookie)
+        json_cookie = json.loads(d_cookie)
 
         sid = json_cookie["sid"]
         uid = user_id
         projectName = product_name
-        cookie = json_cookie["cookie"]
+        user_cookie = json_cookie["cookie"]
         user_agent = request.headers.get("User-Agent")
 
-        userId = find_session(sid, uid, user_agent, cookie)
-        delete_projects(userId, projectName)
+        userId = Sessions.find(
+            sid=sid,
+            unique_identifier=uid,
+            user_agent=user_agent,
+            cookie=user_cookie
+        )
 
-        session = update_session(sid, userId)
+        Products.delete(uid=userId, product_name=projectName)
+
+        session = Sessions.update(
+            sid=sid,
+            unique_identifier=userId
+        )
 
         res = jsonify()
 
+        cookie_data = json.dumps({
+            "sid": session["sid"],
+            "cookie": session["data"]
+        })
+
+        e_cookie = cookie.encrypt(cookie_data)
+
+        session_data = json.loads(session["data"])
+
         res.set_cookie(
-            "SWOBDev",
-            json.dumps({"sid": session["sid"], "cookie": session["data"]}),
-            max_age=timedelta(milliseconds=session["data"]["maxAge"]),
-            secure=session["data"]["secure"],
-            httponly=session["data"]["httpOnly"],
-            samesite=session["data"]["sameSite"],
+            cookie_name,
+            e_cookie,
+            max_age=timedelta(milliseconds=session_data["maxAge"]),
+            secure=session_data["secure"],
+            httponly=session_data["httpOnly"],
+            samesite=session_data["sameSite"]
         )
 
         return res, 200
@@ -449,14 +573,103 @@ def sessions_auth(session_id) -> None:
             logger.error("no cookie")
             raise BadRequest()
 
+        Sessions = Session_Model()
+
         user_agent = request.json["user_agent"]
         sid = session_id
         uid = request.json["uid"]
-        cookie = request.json["cookie"]
+        user_cookie = request.json["cookie"]
 
-        find_session(sid, uid, user_agent, cookie)
+        Sessions.find(
+            sid=sid,
+            unique_identifier=uid,
+            user_agent=user_agent,
+            cookie=user_cookie
+        )
 
         return "", 200
+
+    except BadRequest as err:
+        return str(err), 400
+
+    except Unauthorized as err:
+        return str(err), 401
+
+    except Forbidden as err:
+        return str(err), 403
+
+    except Conflict as err:
+        return str(err), 409
+
+    except InternalServerError as err:
+        logger.exception(err)
+        return "internal server error", 500
+
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500
+
+@v1.route("/users/<string:user_id>/products/<string:product_name>/metrics", methods=["GET"])
+def get_metrics(user_id, product_name) -> None:
+    """
+    """
+    try:
+        if not request.cookies.get("SWOBDev"):
+            logger.error("no cookie")
+            raise Unauthorized()
+        elif not request.headers.get("User-Agent"):
+            logger.error("no user agent")
+            raise BadRequest()
+
+        Sessions = Session_Model()
+        Products = Product_Model()
+        cookie = Cookie()
+
+        e_cookie = request.cookies.get(cookie_name)
+        d_cookie = cookie.decrypt(e_cookie)
+        json_cookie = json.loads(d_cookie)
+
+        sid = json_cookie["sid"]
+        uid = user_id
+        user_cookie = json_cookie["cookie"]
+        user_agent = request.headers.get("User-Agent")
+        projectName = product_name
+
+        userId = Sessions.find(
+            sid=sid,
+            unique_identifier=uid,
+            user_agent=user_agent,
+            cookie=user_cookie
+        )
+        
+        metric = Products.metric(uid=userId, product_name=projectName)
+
+        session = Sessions.update(
+            sid=sid,
+            unique_identifier=userId
+        )
+
+        res = jsonify(metric)
+
+        cookie_data = json.dumps({
+            "sid": session["sid"],
+            "cookie": session["data"]
+        })
+
+        e_cookie = cookie.encrypt(cookie_data)
+
+        session_data = json.loads(session["data"])
+
+        res.set_cookie(
+            cookie_name,
+            e_cookie,
+            max_age=timedelta(milliseconds=session_data["maxAge"]),
+            secure=session_data["secure"],
+            httponly=session_data["httpOnly"],
+            samesite=session_data["sameSite"]
+        )
+
+        return res, 200
 
     except BadRequest as err:
         return str(err), 400
