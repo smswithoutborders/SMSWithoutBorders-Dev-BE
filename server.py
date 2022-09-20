@@ -41,7 +41,6 @@ logger.addHandler(rotatory_handler)
 
 from flask import Flask
 from flask_cors import CORS
-from flask_swagger_ui import get_swaggerui_blueprint
 
 from routes.v1 import v1
 
@@ -61,12 +60,6 @@ CORS(
 create_database()
 create_tables()
 sync_products()
-
-swaggerui_blueprint = get_swaggerui_blueprint(
-    "/v1/api-docs", "/static/v1-api-docs.json"
-)
-
-app.register_blueprint(swaggerui_blueprint)
 
 app.register_blueprint(v1, url_prefix="/v1")
 
