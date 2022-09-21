@@ -14,6 +14,7 @@ from schemas.projects import Products
 
 from werkzeug.exceptions import Conflict
 from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Forbidden
 from werkzeug.exceptions import InternalServerError
 
 class User_Model:
@@ -135,17 +136,30 @@ class User_Model:
 
             auth_key = uuid4().hex
             auth_id = uuid4().hex
-            
-            user = self.Users.update(
-                auth_key=auth_key, 
-                auth_id=auth_id
-            ).where(self.Users.id == uid)
 
-            user.execute()
+            try:
+                user = self.Users.get(self.Users.id == uid)
+                old_auth_id = user.auth_id
+                old_auth_key = user.auth_key
+            except self.Users.DoesNotExist:
+                logger.error("USER DOESN'T EXIST")
+                raise Forbidden()
+            
+            user_upt = (
+                self.Users.update(auth_key=auth_key, auth_id=auth_id)
+                .where(self.Users.id == uid)
+            )
+
+            user_upt.execute()
 
             logger.info("- SUCCESSFULLY GENERATED TOKENS FOR %s" % uid)
 
-            return {"auth_key": auth_key, "auth_id": auth_id}
+            return {
+                "auth_key": auth_key, 
+                "auth_id": auth_id,
+                "old_auth_id": old_auth_id,
+                "old_auth_key": old_auth_key
+            }
 
         except DatabaseError as err:
             logger.error("GENERATING TOKENS FOR %s FAILED CHECK LOGS" % uid)

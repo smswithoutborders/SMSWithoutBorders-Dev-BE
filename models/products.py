@@ -185,6 +185,118 @@ class Product_Model:
         except DatabaseError as err:
             raise InternalServerError(err)
 
+    def purge(self, uid: str) -> list:
+        """
+        """
+        try:
+            logger.debug("Purging %s's products..." % uid)
+
+            result = []
+
+            try:
+                user = self.Users.get(self.Users.id == uid)
+            except self.Users.DoesNotExist:
+                logger.error("USER DOESN'T EXIST")
+                raise Forbidden()
+
+            user_products = (
+                self.Users_projects.select()
+                .where(
+                    self.Users_projects.user_id == user.id
+                )
+                .dicts()
+            )
+
+            for user_product in user_products:
+                try:
+                    userProduct = self.Products.get(self.Products.id == user_product["product"])
+                except self.Products.DoesNotExist:
+                    logger.error("PROJECT '%s' NOT FOUND" % user_product["product"])
+                    raise Forbidden()
+
+                self.delete(
+                    uid=user.id,
+                    product_name=userProduct.name
+                )
+
+                result.append(userProduct.name)
+
+            logger.info("- Successfully purged %s's products" % uid)
+
+            return result
+
+        except DatabaseError as err:
+            raise InternalServerError(err)
+
+    def resync(self, uid: str, old_auth_id: str, products: list) -> bool:
+        """
+        """
+        try:
+            logger.debug("Resyncing %s's products..." % uid)
+
+            try:
+                user = self.Users.get(self.Users.id == uid)
+            except self.Users.DoesNotExist:
+                logger.error("USER DOESN'T EXIST")
+                raise Forbidden()
+
+            for product in products:
+                self.add(
+                    uid=user.id,
+                    product_name=product
+                )
+
+                logger.debug("requesting for %s's metrics for %s ..." % (product, uid))
+
+                authId = user.auth_id
+                authKey = user.auth_key
+
+                setupId = SETUP["ID"]
+                setupKey = SETUP["key"]
+
+                data = {
+                    "auth_id": authId,
+                    "auth_key": authKey,
+                    "old_auth_id": old_auth_id,
+                    "id": setupId,
+                    "key": setupKey,
+                }
+
+                try:
+                    HOST = PRODUCTS["%s" % product]["host"] 
+                    PORT = PRODUCTS["%s" % product]["port"] 
+                    VERSION = PRODUCTS["%s" % product]["version"]
+                    URL = "%s:%s/%s/metrics" % (HOST, PORT, VERSION)
+
+                    response = requests.put(url=URL, json=data)
+
+                    if response.status_code == 401:
+                        logger.error("INVALID SETUP CREDENTIALS")
+                        raise Unauthorized()
+
+                    elif response.status_code == 200:
+                        logger.info("- SUCCESSFULLY UPDATED '%s' METRICS FOR '%s'" % (uid, product))
+                        
+                    elif response.status_code == 400:
+                        logger.error("INCOMPLETE DATA. CHECK YOUR REQUEST BODY")
+                        raise BadRequest()
+
+                    else:
+                        logger.error("%s SERVER FAILED WITH STATUS CODE %s" % (product.upper(), response.status_code))
+                        raise InternalServerError(response)
+
+                except KeyError as error:
+                    logger.error("%s not found in products.ini file" % product)
+                    raise InternalServerError(error)
+                    
+                except Exception as error:
+                    raise InternalServerError(error)
+
+            logger.info("- Successfully resync %s's products" % uid)
+
+        except DatabaseError as err:
+            raise InternalServerError(err)
+
     def metric(self, uid: str, product_name: str) -> dict:
         """
         """

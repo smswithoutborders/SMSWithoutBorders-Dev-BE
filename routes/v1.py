@@ -152,6 +152,7 @@ def get_tokens(user_id) -> dict:
             raise BadRequest()
 
         Users = User_Model()
+        Products = Product_Model()
         Sessions = Session_Model()
         cookie = Cookie()
 
@@ -171,14 +172,25 @@ def get_tokens(user_id) -> dict:
             cookie=user_cookie
         )
 
+        products = Products.purge(uid=uid)
+
         tokens = Users.generate_token(uid=userId)
+
+        Products.resync(
+            uid=uid,
+            old_auth_id=tokens["old_auth_id"],
+            products=products
+        )
 
         session = Sessions.update(
             sid=sid,
             unique_identifier=userId
         )
 
-        res = jsonify(tokens)
+        res = jsonify({
+            "auth_key": tokens["auth_key"], 
+            "auth_id": tokens["auth_id"]
+        })
 
         cookie_data = json.dumps({
             "sid": session["sid"],
