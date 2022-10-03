@@ -8,6 +8,7 @@ This is a cloud API and developer's management service. It is directly configura
 
 1. [Configurations](docs/CONFIGURATIONS.md)
 2. [Features](docs/API_VERSIONS.md)
+3. [References](./docs/references.md)
 
 ## Contribution
 

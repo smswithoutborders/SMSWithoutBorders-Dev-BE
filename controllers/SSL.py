@@ -1,11 +1,9 @@
 import os
-from os.path import exists
 from config_init import configuration
 
 config = configuration()
 
 SSL = config["SSL_API"]
-
 
 def isSSL(path_crt_file: str, path_key_file: str, path_pem_file: str) -> dict:
     """
