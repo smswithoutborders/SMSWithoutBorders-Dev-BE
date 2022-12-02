@@ -1,15 +1,14 @@
 import logging
-logger = logging.getLogger(__name__)
-
-from config_init import configuration
-config = configuration()
-api = config["API"]
-salt = api["SALT"]
-e_key = api["KEY"]
-
 import string
 import hashlib
 import hmac
+
+logger = logging.getLogger(__name__)
+
+from settings import Configurations
+salt = Configurations.HASHING_SALT
+e_key = Configurations.SHARED_KEY
+
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from Crypto import Random

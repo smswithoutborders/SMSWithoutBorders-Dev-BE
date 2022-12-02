@@ -1,21 +1,16 @@
 import logging
+import json
+from datetime import datetime, timedelta
+
 logger = logging.getLogger(__name__)
 
-from config_init import configuration
-config = configuration()
-api = config["API"]
-
-secure = api["SECURE_SESSIONS"]
-hour = eval(api["SESSION_MAXAGE"])
+from settings import Configurations
+secure = Configurations.SECURE_COOKIE
+hour = Configurations.COOKIE_MAXAGE
 
 from peewee import DatabaseError
 
-from schemas.sessions import Sessions
-
-from datetime import datetime
-from datetime import timedelta
-
-import json
+from src.schemas.sessions import Sessions
 
 from werkzeug.exceptions import Unauthorized
 from werkzeug.exceptions import Conflict
@@ -33,7 +28,7 @@ class Session_Model:
 
             data = {
                 "maxAge": hour,
-                "secure": eval(secure),
+                "secure": secure,
                 "httpOnly": True,
                 "sameSite": "lax",
             }
@@ -116,7 +111,7 @@ class Session_Model:
 
             data = {
                 "maxAge": hour,
-                "secure": eval(secure),
+                "secure": secure,
                 "httpOnly": True,
                 "sameSite": "lax",
             }
