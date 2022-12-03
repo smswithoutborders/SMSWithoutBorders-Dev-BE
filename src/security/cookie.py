@@ -1,10 +1,9 @@
 import logging
 logger = logging.getLogger(__name__)
 
-from config_init import configuration
-config = configuration()
-api = config["API"]
-e_key = api["KEY"]
+from settings import Configurations
+salt = Configurations.HASHING_SALT
+e_key = Configurations.SHARED_KEY
 
 from base64 import b64encode, b64decode
 from Crypto.Cipher import AES

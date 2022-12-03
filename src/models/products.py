@@ -1,19 +1,17 @@
 import logging
+import requests
+
 logger = logging.getLogger(__name__)
 
-from config_init import configuration
-
-config = configuration()
-SETUP = config["SETUP_CREDS"]
-PRODUCTS = config["PRODUCT"]
-
-import requests
+from settings import Configurations
+SETUP_ID = Configurations.ID
+SETUP_KEY = Configurations.KEY
 
 from peewee import DatabaseError
 
-from schemas.users_projects import Users_projects
-from schemas.projects import Products
-from schemas.users import Users
+from src.schemas.users_projects import Users_projects
+from src.schemas.projects import Products
+from src.schemas.users import Users
 
 from werkzeug.exceptions import InternalServerError
 from werkzeug.exceptions import Conflict
@@ -53,8 +51,8 @@ class Product_Model:
                 authId = user.auth_id
                 authKey = user.auth_key
 
-                setupId = SETUP["ID"]
-                setupKey = SETUP["key"]
+                setupId = SETUP_ID
+                setupKey = SETUP_KEY
 
                 data = {
                     "auth_id": authId,
@@ -64,9 +62,9 @@ class Product_Model:
                 }
 
                 try:
-                    HOST = PRODUCTS["%s" % product_name]["host"] 
-                    PORT = PRODUCTS["%s" % product_name]["port"] 
-                    VERSION = PRODUCTS["%s" % product_name]["version"]
+                    HOST = getattr(Configurations, "%s_HOST" % product_name.upper())
+                    PORT = getattr(Configurations, "%s_PORT" % product_name.upper())
+                    VERSION = getattr(Configurations, "%s_VERSION" % product_name.upper())
                     URL = "%s:%s/%s/subscribe" % (HOST, PORT, VERSION)
 
                     response = requests.post(url=URL, json=data)
@@ -134,8 +132,8 @@ class Product_Model:
             authId = user.auth_id
             authKey = user.auth_key
 
-            setupId = SETUP["ID"]
-            setupKey = SETUP["key"]
+            setupId = SETUP_ID
+            setupKey = SETUP_KEY
 
             data = {
                 "auth_id": authId,
@@ -145,9 +143,9 @@ class Product_Model:
             }
 
             try:
-                HOST = PRODUCTS["%s" % product_name]["host"] 
-                PORT = PRODUCTS["%s" % product_name]["port"] 
-                VERSION = PRODUCTS["%s" % product_name]["version"]
+                HOST = getattr(Configurations, "%s_HOST" % product_name.upper())
+                PORT = getattr(Configurations, "%s_PORT" % product_name.upper())
+                VERSION = getattr(Configurations, "%s_VERSION" % product_name.upper())
                 URL = "%s:%s/%s/unsubscribe" % (HOST, PORT, VERSION)
 
                 response = requests.delete(url=URL, json=data)
@@ -251,8 +249,8 @@ class Product_Model:
                 authId = user.auth_id
                 authKey = user.auth_key
 
-                setupId = SETUP["ID"]
-                setupKey = SETUP["key"]
+                setupId = SETUP_ID
+                setupKey = SETUP_KEY
 
                 data = {
                     "auth_id": authId,
@@ -263,9 +261,9 @@ class Product_Model:
                 }
 
                 try:
-                    HOST = PRODUCTS["%s" % product]["host"] 
-                    PORT = PRODUCTS["%s" % product]["port"] 
-                    VERSION = PRODUCTS["%s" % product]["version"]
+                    HOST = getattr(Configurations, "%s_HOST" % product.upper())
+                    PORT = getattr(Configurations, "%s_PORT" % product.upper())
+                    VERSION = getattr(Configurations, "%s_VERSION" % product.upper())
                     URL = "%s:%s/%s/metrics" % (HOST, PORT, VERSION)
 
                     response = requests.put(url=URL, json=data)
@@ -326,8 +324,8 @@ class Product_Model:
             authId = user.auth_id
             authKey = user.auth_key
 
-            setupId = SETUP["ID"]
-            setupKey = SETUP["key"]
+            setupId = SETUP_ID
+            setupKey = SETUP_KEY
 
             data = {
                 "auth_id": authId,
@@ -337,9 +335,9 @@ class Product_Model:
             }
 
             try:
-                HOST = PRODUCTS["%s" % product_name]["host"] 
-                PORT = PRODUCTS["%s" % product_name]["port"] 
-                VERSION = PRODUCTS["%s" % product_name]["version"]
+                HOST = getattr(Configurations, "%s_HOST" % product_name.upper())
+                PORT = getattr(Configurations, "%s_PORT" % product_name.upper())
+                VERSION = getattr(Configurations, "%s_VERSION" % product_name.upper())
                 URL = "%s:%s/%s/metrics" % (HOST, PORT, VERSION)
 
                 response = requests.post(url=URL, json=data)

@@ -1,16 +1,16 @@
 import logging
+from uuid import uuid4
+
 logger = logging.getLogger(__name__)
 
-from security.data import Data
+from src.security.data import Data
 
 from peewee import DatabaseError
 
-from uuid import uuid4
-
-from schemas.baseModel import db
-from schemas.users import Users
-from schemas.users_projects import Users_projects
-from schemas.projects import Products
+from src.schemas.db_connector import db
+from src.schemas.users import Users
+from src.schemas.users_projects import Users_projects
+from src.schemas.projects import Products
 
 from werkzeug.exceptions import Conflict
 from werkzeug.exceptions import Unauthorized

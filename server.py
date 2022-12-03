@@ -1,14 +1,15 @@
 import logging
-from logging.handlers import TimedRotatingFileHandler
-import os
 import argparse
 import ssl
 
-from config_init import configuration
-
-config = configuration()
-api = config["API"]
-SSL = config["SSL_API"]
+from settings import Configurations
+ssl_cert = Configurations.SSL_CERTIFICATE
+ssl_port = Configurations.SSL_PORT
+ssl_key = Configurations.SSL_KEY
+ssl_pem = Configurations.SSL_PEM
+api_host = Configurations.HOST
+api_port = Configurations.PORT
+api_origins = Configurations.ORIGINS
 
 # logger
 parser = argparse.ArgumentParser()
@@ -23,55 +24,34 @@ numeric_level = getattr(logging, log_level.upper(), None)
 if not isinstance(numeric_level, int):
     raise ValueError("Invalid log level: %s" % log_level)
 
-if not os.path.exists("logs/"):
-    os.makedirs("logs/")
-
 logging.basicConfig(level=numeric_level)
-
-logger = logging.getLogger()
-rotatory_handler = TimedRotatingFileHandler(
-    "logs/combined.log", when="D", interval=1, backupCount=30
-)
-rotatory_handler.setLevel(logging.INFO)
-formatter = logging.Formatter(
-    "%(asctime)s | %(levelname)s | %(message)s", "%m-%d-%Y %H:%M:%S"
-)
-rotatory_handler.setFormatter(formatter)
-logger.addHandler(rotatory_handler)
 
 from flask import Flask
 from flask_cors import CORS
 
-from routes.v1 import v1
+from src.api_v1 import v1
 
-from controllers.sync_database import create_database
-from controllers.sync_database import create_tables
-from controllers.sync_database import sync_products
-from controllers.SSL import isSSL
+from utils.SSL import isSSL
 
 app = Flask(__name__)
 
 CORS(
     app,
-    origins=api["ORIGINS"],
+    origins=api_origins,
     supports_credentials=True,
 )
 
-create_database()
-create_tables()
-sync_products()
-
 app.register_blueprint(v1, url_prefix="/v1")
 
-checkSSL = isSSL(path_crt_file=SSL["CERTIFICATE"], path_key_file=SSL["KEY"], path_pem_file=SSL["PEM"])
+checkSSL = isSSL(path_crt_file=ssl_cert, path_key_file=ssl_key, path_pem_file=ssl_pem)
 
 if __name__ == "__main__":
     if checkSSL:
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        context.load_cert_chain(SSL["CERTIFICATE"], SSL["KEY"])
+        context.load_cert_chain(ssl_cert, ssl_key)
 
-        app.logger.info("Running on secure port: %s" % SSL['PORT'])
-        app.run(host=api["HOST"], port=SSL["PORT"], ssl_context=context)
+        app.logger.info("Running on secure port: %s" % ssl_port)
+        app.run(host=api_host, port=ssl_port, ssl_context=context)
     else:
-        app.logger.info("Running on un-secure port: %s" % api['PORT'])
-        app.run(host=api["HOST"], port=api["PORT"])
+        app.logger.info("Running on un-secure port: %s" % api_port)
+        app.run(host=api_host, port=api_port)

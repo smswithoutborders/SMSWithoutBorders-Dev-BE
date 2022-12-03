@@ -1,24 +1,25 @@
 import logging
+import json
+import base64
+from datetime import timedelta
+
 logger = logging.getLogger(__name__)
+
+from settings import Configurations
+cookie_name = Configurations.COOKIE_NAME
 
 from flask import Blueprint
 from flask import jsonify
 from flask import request
 v1 = Blueprint("v1", __name__)
 
-cookie_name = "SWOBDev"
+from src.schemas.db_connector import db
 
-import json
-import base64
-from datetime import timedelta
+from src.models.users import User_Model
+from src.models.products import Product_Model
+from src.models.sessions import Session_Model
 
-from schemas.baseModel import db
-
-from models.users import User_Model
-from models.products import Product_Model
-from models.sessions import Session_Model
-
-from security.cookie import Cookie
+from src.security.cookie import Cookie
 
 from werkzeug.exceptions import InternalServerError
 from werkzeug.exceptions import Conflict
