@@ -66,6 +66,8 @@ class Product_Model:
                     PORT = getattr(Configurations, "%s_PORT" % product_name.upper())
                     VERSION = getattr(Configurations, "%s_VERSION" % product_name.upper())
                     URL = "%s:%s/%s/subscribe" % (HOST, PORT, VERSION)
+                    
+                    print(URL)
 
                     response = requests.post(url=URL, json=data)
 
